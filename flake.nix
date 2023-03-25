@@ -22,7 +22,7 @@
       inherit (pkgs) poetry2nix lib stdenv fetchurl fetchFromGitHub;
       inherit (pkgs.cudaPackages) cudatoolkit;
       inherit (pkgs.linuxPackages) nvidia_x11;
-      python = pkgs.python39;
+      python = pkgs.python38;
       pythonEnv = poetry2nix.mkPoetryEnv {
         inherit python;
         projectDir = ./.;
@@ -38,8 +38,8 @@
               (old: {
                 inherit (old) pname version;
                 src = fetchurl {
-                  url = "https://download.pytorch.org/whl/cu115/torch-1.11.0%2Bcu115-cp39-cp39-linux_x86_64.whl";
-                  sha256 = "sha256-64HQZ7vP6ETJXF0n4myXqWqJNCfMRosiWerw7ZPaHH0=";
+                  url = "https://download.pytorch.org/whl/cu115/torch-1.11.0%2Bcu115-cp38-cp38-linux_x86_64.whl";
+                  sha256 = "sha256-Anedx8DNGIQWSWrbIzrp45iKmqc9nrujYkUH0PIRHzw=";
                 };
               })
             else pyprev.torch;
@@ -50,7 +50,7 @@
     in {
       devShell = pkgs.mkShell {
         buildInputs =
-          [pythonEnv]
+          [pythonEnv pkgs.poetry]
           ++ lib.optionals useCuda [
             nvidia_x11
             cudatoolkit
