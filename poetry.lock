@@ -769,7 +769,7 @@ python-versions = "*"
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -854,7 +854,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.10"
-content-hash = "e07c0a42c93d6e3fcfa0457d58f68958514a060734cfe7407e5b140482dba46b"
+content-hash = "4d821507c11315942c80fd5b829d2603f8b28e79bc515ac5b6fa58ef9f68885b"
 
 [metadata.files]
 absl-py = [
