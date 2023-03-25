@@ -19,7 +19,7 @@
         config.cudaSupport = useCuda;
         config.allowUnfree = true;
       };
-      inherit (pkgs) poetry2nix lib stdenv fetchurl fetchFromGitHub;
+      inherit (pkgs) poetry2nix lib stdenv fetchurl fetchFromGitHub fetchPypi;
       inherit (pkgs.cudaPackages) cudatoolkit;
       inherit (pkgs.linuxPackages) nvidia_x11;
       python = pkgs.python39;
@@ -29,6 +29,121 @@
         preferWheels = true;
         overrides = poetry2nix.overrides.withDefaults (pyfinal: pyprev: rec {
           # Use cuda-enabled pytorch as required
+          matplotlib = pyprev.matplotlib.overridePythonAttrs (old: let
+            enableTk = true;
+          in {
+            inherit (old) version pname;
+            #version = "3.5.3";
+            #pname = "matplotlib";
+            format = "setuptools";
+
+            src = fetchPypi {
+              inherit (old) version pname;
+              sha256 = "sha256-M5ysSLgN28i/0F2q4KOnNBRlGoWWkEwqiBz9Httl8mw=";
+            };
+
+            XDG_RUNTIME_DIR = "/tmp";
+
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+              setuptools-scm
+              setuptools-scm-git-archive
+            ];
+
+            buildInputs = with pkgs;
+              [
+                which
+                sphinx
+              ]
+              ++ lib.optionals enableGhostscript [
+                ghostscript
+              ]
+              ++ lib.optionals stdenv.isDarwin [
+                Cocoa
+              ];
+
+            propagatedBuildInputs = with pkgs;
+              [
+                certifi
+                cycler
+                fonttools
+                freetype
+                kiwisolver
+                libpng
+                mock
+                numpy
+                packaging
+                pillow
+                pyparsing
+                python-dateutil
+                pytz
+                qhull
+                tornado
+              ]
+              ++ lib.optionals enableGtk3 [
+                cairo
+                gobject-introspection
+                gtk3
+                pycairo
+                pygobject3
+              ]
+              ++ lib.optionals enableTk (with pkgs; [
+                xorg.libX11
+                tcl
+                tk
+                tkinter
+              ])
+              ++ lib.optionals enableQt [
+                pyqt5
+              ];
+
+            passthru.config = {
+              directories = {basedirlist = ".";};
+              libs =
+                {
+                  system_freetype = true;
+                  system_qhull = true;
+                }
+                // lib.optionalAttrs stdenv.isDarwin {
+                  # LTO not working in darwin stdenv, see #19312
+                  enable_lto = false;
+                };
+            };
+
+            MPLSETUPCFG = with pkgs; writeText "mplsetup.cfg" (lib.generators.toINI {} passthru.config);
+
+            # Matplotlib tries to find Tcl/Tk by opening a Tk window and asking the
+            # corresponding interpreter object for its library paths. This fails if
+            # `$DISPLAY` is not set. The fallback option assumes that Tcl/Tk are both
+            # installed under the same path which is not true in Nix.
+            # With the following patch we just hard-code these paths into the install
+            # script.
+            postPatch = let
+              tcl_tk_cache = with pkgs; ''"${tk}/lib", "${tcl}/lib", "${lib.strings.substring 0 3 tk.version}"'';
+            in
+              lib.optionalString enableTk ''
+                sed -i '/self.tcl_tk_cache = None/s|None|${tcl_tk_cache}|' setupext.py
+              ''
+              + lib.optionalString (stdenv.isLinux) ''
+                # fix paths to libraries in dlopen calls (headless detection)
+                substituteInPlace src/_c_internal_utils.c \
+                  --replace libX11.so.6 ${pkgs.xorg.libX11}/lib/libX11.so.6 \
+                  --replace libwayland-client.so.0 ${pkgs.wayland}/lib/libwayland-client.so.0
+              ''
+              +
+              # avoid matplotlib trying to download dependencies
+              ''
+                echo "[libs]
+                system_freetype=true
+                system_qhull=true" > mplsetup.cfg
+                substituteInPlace setup.py \
+                  --replace "setuptools_scm>=4,<7" "setuptools_scm>=4"
+              '';
+
+            # Matplotlib needs to be built against a specific version of freetype in
+            # order for all of the tests to pass.
+            doCheck = false;
+          });
           torch =
             if useCuda
             then
