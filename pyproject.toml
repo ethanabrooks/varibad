@@ -7,7 +7,7 @@ authors = ["Logan Walls <2934282+LoganWalls@users.noreply.github.com>"]
 [tool.poetry.dependencies]
 python = ">=3.8,<3.10"
 torch = "1.11.0"
-numpy = "^1.23.0"
+numpy = "1.22.0"
 mujoco = "^2.3.3"
 gym = "0.17.2"
 tensorboard = "^2.12.0"
