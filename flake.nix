@@ -40,6 +40,11 @@
           poetryEnv
         ];
         PYTHONBREAKPOINT = "ipdb.set_trace";
+        shellHook = ''
+          set -o allexport
+          source .env
+          set +o allexport
+        '';
       };
     };
   in
