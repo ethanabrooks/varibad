@@ -436,6 +436,28 @@ unicode = ["unicodedata2 (>=15.0.0)"]
 woff = ["brotli (>=1.0.1)", "brotlicffi (>=0.8.0)", "zopfli (>=0.1.4)"]
 
 [[package]]
+name = "glfw"
+version = "2.5.7"
+description = "A ctypes-based wrapper for GLFW3."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "glfw-2.5.7-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-macosx_10_6_intel.whl", hash = "sha256:337120ae0521064c5c8ab054ec8dec3236628f1890c0b9ac0cf623857202de62"},
+    {file = "glfw-2.5.7-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-macosx_11_0_arm64.whl", hash = "sha256:97f2624b57eee5e4052894b49baea0ececc6f24ae169ba460bfcc458128eebc1"},
+    {file = "glfw-2.5.7-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-manylinux2010_i686.whl", hash = "sha256:130a2ebbf50118250f7070c80cca812882ad96d271609f514ed915db27d16b8a"},
+    {file = "glfw-2.5.7-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-manylinux2010_x86_64.whl", hash = "sha256:30ddfb7a3ae36685c4364f57f42e37f10b5d57e4be8499f16f51fbf5c94be792"},
+    {file = "glfw-2.5.7-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-manylinux2014_aarch64.whl", hash = "sha256:7114deab3f688561667602bc936244b7130d479faff3b9c606b0993bbd672322"},
+    {file = "glfw-2.5.7-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-manylinux2014_x86_64.whl", hash = "sha256:6e6ea97f7acfd9f42c28596fbf27a3ef73447ab88bde442b6892cc9ccaa8ad6e"},
+    {file = "glfw-2.5.7-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-win32.whl", hash = "sha256:6b73a428fd965697fd2408e137b535adfaef50d5183b5aac0e6aeb39c0540edf"},
+    {file = "glfw-2.5.7-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-win_amd64.whl", hash = "sha256:79f27c75c1b33facea4dbe5e94e252dd3c4f61f0bb6e4c7d30c9e88dbcc91365"},
+    {file = "glfw-2.5.7.tar.gz", hash = "sha256:b094c66967f675a7b2c6eed85fe67906f62c6c62de66e2a3f7f2015010639e57"},
+]
+
+[package.extras]
+preview = ["glfw-preview"]
+
+[[package]]
 name = "google-auth"
 version = "2.16.3"
 description = "Google Authentication Library"
@@ -967,6 +989,47 @@ files = [
 ]
 
 [[package]]
+name = "mujoco"
+version = "2.3.3"
+description = "MuJoCo Physics Simulator"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "mujoco-2.3.3-2-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:7b95a0b7ae8bb9e36d04ba475a950025791c43087845235bb92bd2dd1787589a"},
+    {file = "mujoco-2.3.3-2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8b9f8e9e6d47fe60f96dc54be780a66a38d5ec2ff94d091ad54c6f87468b4b6a"},
+    {file = "mujoco-2.3.3-2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a9cbd3b60ac30f0b6661de050ca3e1de906b9c28ed9d084bdd708c141953247d"},
+    {file = "mujoco-2.3.3-2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9c7fd195bca86102788d86dbc2773c59c1f0ee3933b35eb0f6a86f0f2aeb5065"},
+    {file = "mujoco-2.3.3-2-cp310-cp310-win_amd64.whl", hash = "sha256:f3595e992770eff3f842cb80f7eb2b7b1b3e78995b6ecc247f98036da17ef74f"},
+    {file = "mujoco-2.3.3-2-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:fc833b7dd8d60aa1f37f63807666a59f9d7bce99f3aecd5b32e5104b6b0aae0a"},
+    {file = "mujoco-2.3.3-2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:611c0d2be4d725ad5d04a0ed4b21e6e5bcc20357693a96d3a4d99af247b14478"},
+    {file = "mujoco-2.3.3-2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:532b24fb1f0468478d34d2549bb0c98a8ff76d8ebaa5f409509320857ce20d1b"},
+    {file = "mujoco-2.3.3-2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ecff0bcd488b8aaa8e2e596084bd513adf6c1713512ce55692ffbd1f2b9ff3df"},
+    {file = "mujoco-2.3.3-2-cp311-cp311-win_amd64.whl", hash = "sha256:8fc14a0c061c47436545591d56dc84639876d81263d2493746418fbd2f22d0ff"},
+    {file = "mujoco-2.3.3-2-cp37-cp37m-macosx_10_12_x86_64.whl", hash = "sha256:11704dba4ebae37c066a08d85e4d213d3b9e7cc77dc57d496b485cd5e5756dd0"},
+    {file = "mujoco-2.3.3-2-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5cc10a293826610147815b917a218f41ab8ec53dd837f38ffd52b9e3fab80d8b"},
+    {file = "mujoco-2.3.3-2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c5a801e1f5d7e1252f984828ff88c31dacf96ceab68e14da6667b824e6aa7af2"},
+    {file = "mujoco-2.3.3-2-cp37-cp37m-win_amd64.whl", hash = "sha256:0ec01ba21f81ca65119403c80e39c29a3b8902ebe9417b27f9c43803211f6e00"},
+    {file = "mujoco-2.3.3-2-cp38-cp38-macosx_10_12_x86_64.whl", hash = "sha256:bce8364ea2624c922d3c11ceeb27ddaa782c9634f79d261674fef2d9301e8ba7"},
+    {file = "mujoco-2.3.3-2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:f6ed5aed24b581a22645b50d205d2c531a37579b13c3664d00f373a3a95ebbdb"},
+    {file = "mujoco-2.3.3-2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d5c18fee42748e69bff1d24d5118a1541adc493dc7c2303a128996384984f020"},
+    {file = "mujoco-2.3.3-2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4355f7b12e7119ebadc0634d5b349117775acb1a93e24cbc9f1be93520d0b040"},
+    {file = "mujoco-2.3.3-2-cp38-cp38-win_amd64.whl", hash = "sha256:478034faee89b23342cec6b45a45d85f0f1062ae5ecdd62bd07f195851b7ede4"},
+    {file = "mujoco-2.3.3-2-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:82b00cd1a50103435df0a82e3f1d9022c19284bba3bb19877678a6081a6e3a6b"},
+    {file = "mujoco-2.3.3-2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:0fb65279bee3fa349d4c9984545d4fff69b88eee96e9e08ef8b8fd3553213f58"},
+    {file = "mujoco-2.3.3-2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3b454b5915f7cfd47cd0cb68fcaf38295889572a976c449f2ac3dad57f4b8dbe"},
+    {file = "mujoco-2.3.3-2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ff8ad3a08b60d2d16e4878d50948c97b0f68175fc5314c70e15e52bd6c2c74e2"},
+    {file = "mujoco-2.3.3-2-cp39-cp39-win_amd64.whl", hash = "sha256:047d504292a331c5316314b01e7afdf7796658fd7f851d294b10fca7c3124ba1"},
+    {file = "mujoco-2.3.3.zip", hash = "sha256:8bd074d3c5d9d25416cf2a5b82b337a7431a6e20edbd0da7fbc05ee5255c1aaa"},
+]
+
+[package.dependencies]
+absl-py = "*"
+glfw = "*"
+numpy = "*"
+pyopengl = "*"
+
+[[package]]
 name = "mypy"
 version = "0.971"
 description = "Optional static typing for Python"
@@ -1416,6 +1479,19 @@ files = [
 plugins = ["importlib-metadata"]
 
 [[package]]
+name = "pyopengl"
+version = "3.1.6"
+description = "Standard OpenGL bindings for Python"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "PyOpenGL-3.1.6-py2-none-any.whl", hash = "sha256:57c597d989178e1413002df6b923619f6d29807501dece1c60cc6f12c0c8e8a7"},
+    {file = "PyOpenGL-3.1.6-py3-none-any.whl", hash = "sha256:a7139bc3e15d656feae1f7e3ef68c799941ed43fadc78177a23db7e946c20738"},
+    {file = "PyOpenGL-3.1.6.tar.gz", hash = "sha256:8ea6c8773927eda7405bffc6f5bb93be81569a7b05c8cac50cd94e969dce5e27"},
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.0.9"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -1824,4 +1900,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "efd60ad50a9149184c984bf2336d93b157dec6e8087358566bf05d6c19ebeafb"
+content-hash = "efabc59dbe9e4f03e1ac16a0e5b38006f7fc5428838155d6025570c68882741c"
