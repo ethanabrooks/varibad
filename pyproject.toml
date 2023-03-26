@@ -7,7 +7,7 @@ authors = ["Logan Walls <2934282+LoganWalls@users.noreply.github.com>", "Ethan B
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
 torch = "1.11.0"
-gym = "^0.26.2"
+gym = '==0.17.2'
 matplotlib = "^3.7.1"
 tensorboard = "^2.12.0"
 
