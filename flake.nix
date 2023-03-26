@@ -31,41 +31,6 @@
           inherit (pyprev) buildPythonPackage fetchPypi;
         in rec {
           # Use cuda-enabled pytorch as required
-          setuptools-scm = buildPythonPackage rec {
-            pname = "setuptools-scm";
-            version = "7.0.5";
-
-            src = fetchPypi {
-              pname = "setuptools_scm";
-              inherit version;
-              sha256 = "sha256-Ax4Tr3cdb4krlBrbbqBFRbv5Hrxc5ox4qvP/9uH7SEQ=";
-            };
-
-            propagatedBuildInputs = with pyfinal; [
-              packaging
-              #typing-extensions
-              tomli
-              setuptools
-            ];
-
-            pythonImportsCheck = [
-              "setuptools_scm"
-            ];
-
-            # check in passthru.tests.pytest to escape infinite recursion on pytest
-            doCheck = false;
-
-            passthru.tests = {
-              pytest = pkgs.callPackage ./tests.nix {};
-            };
-
-            #meta = with lib; {
-            #homepage = "https://github.com/pypa/setuptools_scm/";
-            #description = "Handles managing your python package versions in scm metadata";
-            #license = licenses.mit;
-            #maintainers = with maintainers; [SuperSandro2000];
-            #};
-          };
           torch =
             if useCuda
             then
