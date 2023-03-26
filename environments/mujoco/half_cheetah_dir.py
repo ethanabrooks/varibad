@@ -45,14 +45,19 @@ class HalfCheetahDirEnv(HalfCheetahEnv):
         observation = self._get_obs()
         reward = forward_reward - ctrl_cost
         done = False
-        infos = dict(reward_forward=forward_reward,
-                     reward_ctrl=-ctrl_cost,
-                     task=self.get_task())
+        infos = dict(
+            reward_forward=forward_reward, reward_ctrl=-ctrl_cost, task=self.get_task()
+        )
         return observation, reward, done, infos
 
     def sample_tasks(self, n_tasks):
         # for fwd/bwd env, goal direc is backwards if - 1.0, forwards if + 1.0
-        return [random.choice([-1.0, 1.0]) for _ in range(n_tasks, )]
+        return [
+            random.choice([-1.0, 1.0])
+            for _ in range(
+                n_tasks,
+            )
+        ]
 
     def set_task(self, task):
         if isinstance(task, np.ndarray):

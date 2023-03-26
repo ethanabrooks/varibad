@@ -1,5 +1,6 @@
 import os
 import pickle
+
 # import pickle5 as pickle
 import random
 import warnings
@@ -44,7 +45,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def reset_env(env, args, indices=None, state=None):
-    """ env can be many environments or just one """
+    """env can be many environments or just one"""
     # reset all environments
     if (indices is None) or (len(indices) == args.num_processes):
         state = env.reset().float().to(device)
@@ -54,9 +55,17 @@ def reset_env(env, args, indices=None, state=None):
         for i in indices:
             state[i] = env.reset(index=i)
 
-    belief = torch.from_numpy(env.get_belief()).float().to(device) if args.pass_belief_to_policy else None
-    task = torch.from_numpy(env.get_task()).float().to(device) if args.pass_task_to_policy else None
-        
+    belief = (
+        torch.from_numpy(env.get_belief()).float().to(device)
+        if args.pass_belief_to_policy
+        else None
+    )
+    task = (
+        torch.from_numpy(env.get_task()).float().to(device)
+        if args.pass_task_to_policy
+        else None
+    )
+
     return state, belief, task
 
 
@@ -80,23 +89,45 @@ def env_step(env, action, args):
     else:
         reward = reward.to(device)
 
-    belief = torch.from_numpy(env.get_belief()).float().to(device) if args.pass_belief_to_policy else None
-    task = torch.from_numpy(env.get_task()).float().to(device) if (args.pass_task_to_policy or args.decode_task) else None
+    belief = (
+        torch.from_numpy(env.get_belief()).float().to(device)
+        if args.pass_belief_to_policy
+        else None
+    )
+    task = (
+        torch.from_numpy(env.get_task()).float().to(device)
+        if (args.pass_task_to_policy or args.decode_task)
+        else None
+    )
 
     return [next_obs, belief, task], reward, done, infos
 
 
-def select_action(args,
-                  policy,
-                  deterministic,
-                  state=None,
-                  belief=None,
-                  task=None,
-                  latent_sample=None, latent_mean=None, latent_logvar=None):
-    """ Select action using the policy. """
-    latent = get_latent_for_policy(args=args, latent_sample=latent_sample, latent_mean=latent_mean,
-                                   latent_logvar=latent_logvar)
-    action = policy.act(state=state, latent=latent, belief=belief, task=task, deterministic=deterministic)
+def select_action(
+    args,
+    policy,
+    deterministic,
+    state=None,
+    belief=None,
+    task=None,
+    latent_sample=None,
+    latent_mean=None,
+    latent_logvar=None,
+):
+    """Select action using the policy."""
+    latent = get_latent_for_policy(
+        args=args,
+        latent_sample=latent_sample,
+        latent_mean=latent_mean,
+        latent_logvar=latent_logvar,
+    )
+    action = policy.act(
+        state=state,
+        latent=latent,
+        belief=belief,
+        task=task,
+        deterministic=deterministic,
+    )
     if isinstance(action, list) or isinstance(action, tuple):
         value, action = action
     else:
@@ -105,7 +136,9 @@ def select_action(args,
     return value, action
 
 
-def get_latent_for_policy(args, latent_sample=None, latent_mean=None, latent_logvar=None):
+def get_latent_for_policy(
+    args, latent_sample=None, latent_mean=None, latent_logvar=None
+):
 
     if (latent_sample is None) and (latent_mean is None) and (latent_logvar is None):
         return None
@@ -132,11 +165,13 @@ def update_encoding(encoder, next_obs, action, reward, done, hidden_state):
         hidden_state = encoder.reset_hidden(hidden_state, done)
 
     with torch.no_grad():
-        latent_sample, latent_mean, latent_logvar, hidden_state = encoder(actions=action.float(),
-                                                                          states=next_obs,
-                                                                          rewards=reward,
-                                                                          hidden_state=hidden_state,
-                                                                          return_prior=False)
+        latent_sample, latent_mean, latent_logvar, hidden_state = encoder(
+            actions=action.float(),
+            states=next_obs,
+            rewards=reward,
+            hidden_state=hidden_state,
+            return_prior=False,
+        )
 
     # TODO: move the sampling out of the encoder!
 
@@ -144,7 +179,7 @@ def update_encoding(encoder, next_obs, action, reward, done, hidden_state):
 
 
 def seed(seed, deterministic_execution=False):
-    print('Seeding random, torch, numpy.')
+    print("Seeding random, torch, numpy.")
     random.seed(seed)
     torch.manual_seed(seed)
     torch.random.manual_seed(seed)
@@ -154,25 +189,21 @@ def seed(seed, deterministic_execution=False):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
     else:
-        print('Note that due to parallel processing results will be similar but not identical. '
-              'Use only one process and set --deterministic_execution to True if you want identical results '
-              '(only recommended for debugging).')
+        print(
+            "Note that due to parallel processing results will be similar but not identical. "
+            "Use only one process and set --deterministic_execution to True if you want identical results "
+            "(only recommended for debugging)."
+        )
 
 
 def update_linear_schedule(optimizer, epoch, total_num_epochs, initial_lr):
     """Decreases the learning rate linearly"""
     lr = initial_lr - (initial_lr * (epoch / float(total_num_epochs)))
     for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+        param_group["lr"] = lr
 
 
-def recompute_embeddings(
-        policy_storage,
-        encoder,
-        sample,
-        update_idx,
-        detach_every
-):
+def recompute_embeddings(policy_storage, encoder, sample, update_idx, detach_every):
     # get the prior
     latent_sample = [policy_storage.latent_samples[0].detach().clone()]
     latent_mean = [policy_storage.latent_mean[0].detach().clone()]
@@ -189,14 +220,15 @@ def recompute_embeddings(
         # reset hidden state of the GRU when we reset the task
         h = encoder.reset_hidden(h, policy_storage.done[i + 1])
 
-        ts, tm, tl, h = encoder(policy_storage.actions.float()[i:i + 1],
-                                policy_storage.next_state[i:i + 1],
-                                policy_storage.rewards_raw[i:i + 1],
-                                h,
-                                sample=sample,
-                                return_prior=False,
-                                detach_every=detach_every
-                                )
+        ts, tm, tl, h = encoder(
+            policy_storage.actions.float()[i : i + 1],
+            policy_storage.next_state[i : i + 1],
+            policy_storage.rewards_raw[i : i + 1],
+            h,
+            sample=sample,
+            return_prior=False,
+            detach_every=detach_every,
+        )
 
         # print(i, reset_task.sum())
         # print(i, (policy_storage.latent_mean[i + 1] - tm).sum())
@@ -209,11 +241,16 @@ def recompute_embeddings(
 
     if update_idx == 0:
         try:
-            assert (torch.cat(policy_storage.latent_mean) - torch.cat(latent_mean)).sum() == 0
-            assert (torch.cat(policy_storage.latent_logvar) - torch.cat(latent_logvar)).sum() == 0
+            assert (
+                torch.cat(policy_storage.latent_mean) - torch.cat(latent_mean)
+            ).sum() == 0
+            assert (
+                torch.cat(policy_storage.latent_logvar) - torch.cat(latent_logvar)
+            ).sum() == 0
         except AssertionError:
-            warnings.warn('You are not recomputing the embeddings correctly!')
+            warnings.warn("You are not recomputing the embeddings correctly!")
             import pdb
+
             pdb.set_trace()
 
     policy_storage.latent_samples = latent_sample
@@ -222,7 +259,7 @@ def recompute_embeddings(
 
 
 class FeatureExtractor(nn.Module):
-    """ Used for extrating features for states/actions/rewards """
+    """Used for extrating features for states/actions/rewards"""
 
     def __init__(self, input_size, output_size, activation_function):
         super(FeatureExtractor, self).__init__()
@@ -237,7 +274,9 @@ class FeatureExtractor(nn.Module):
         if self.output_size != 0:
             return self.activation_function(self.fc(inputs))
         else:
-            return torch.zeros(0, ).to(device)
+            return torch.zeros(
+                0,
+            ).to(device)
 
 
 def sample_gaussian(mu, logvar, num=None):
@@ -250,14 +289,14 @@ def sample_gaussian(mu, logvar, num=None):
 
 
 def save_obj(obj, folder, name):
-    filename = os.path.join(folder, name + '.pkl')
-    with open(filename, 'wb') as f:
+    filename = os.path.join(folder, name + ".pkl")
+    with open(filename, "wb") as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
 def load_obj(folder, name):
-    filename = os.path.join(folder, name + '.pkl')
-    with open(filename, 'rb') as f:
+    filename = os.path.join(folder, name + ".pkl")
+    with open(filename, "rb") as f:
         return pickle.load(f)
 
 
@@ -278,10 +317,13 @@ class RunningMeanStd(object):
 
     def update_from_moments(self, batch_mean, batch_var, batch_count):
         self.mean, self.var, self.count = update_mean_var_count_from_moments(
-            self.mean, self.var, self.count, batch_mean, batch_var, batch_count)
+            self.mean, self.var, self.count, batch_mean, batch_var, batch_count
+        )
 
 
-def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var, batch_count):
+def update_mean_var_count_from_moments(
+    mean, var, count, batch_mean, batch_var, batch_count
+):
     delta = batch_mean - mean
     tot_count = count + batch_count
 
@@ -301,22 +343,32 @@ def boolean_argument(value):
 
 
 def get_task_dim(args):
-    env = make_vec_envs(env_name=args.env_name, seed=args.seed, num_processes=args.num_processes,
-                        gamma=args.policy_gamma, device=device,
-                        episodes_per_task=args.max_rollouts_per_task,
-                        normalise_rew=args.norm_rew_for_policy, ret_rms=None,
-                        tasks=None
-                        )
+    env = make_vec_envs(
+        env_name=args.env_name,
+        seed=args.seed,
+        num_processes=args.num_processes,
+        gamma=args.policy_gamma,
+        device=device,
+        episodes_per_task=args.max_rollouts_per_task,
+        normalise_rew=args.norm_rew_for_policy,
+        ret_rms=None,
+        tasks=None,
+    )
     return env.task_dim
 
 
 def get_num_tasks(args):
-    env = make_vec_envs(env_name=args.env_name, seed=args.seed, num_processes=args.num_processes,
-                        gamma=args.policy_gamma, device=device,
-                        episodes_per_task=args.max_rollouts_per_task,
-                        normalise_rew=args.norm_rew_for_policy, ret_rms=None,
-                        tasks=None
-                        )
+    env = make_vec_envs(
+        env_name=args.env_name,
+        seed=args.seed,
+        num_processes=args.num_processes,
+        gamma=args.policy_gamma,
+        device=device,
+        episodes_per_task=args.max_rollouts_per_task,
+        normalise_rew=args.norm_rew_for_policy,
+        ret_rms=None,
+        tasks=None,
+    )
     try:
         num_tasks = env.num_tasks
     except AttributeError:
