@@ -1,0 +1,13 @@
+diff --git a/mujoco_py/builder.py b/mujoco_py/builder.py
+index 5280b2c..8005c1a 100644
+--- a/mujoco_py/builder.py
++++ b/mujoco_py/builder.py
+@@ -211,6 +211,8 @@
+             include_dirs=[
+                 self.CYMJ_DIR_PATH,
+                 join(mujoco_path, 'include'),
++                join('/nix/store/8y0f6mq7mhd3l4i9g1apzfwnclh9par5-mujoco-2.3.0/',
++                     'include/mujoco'),
+                 np.get_include(),
+             ],
+             libraries=['mujoco210'],

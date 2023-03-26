@@ -18,6 +18,34 @@
       };
       inherit (pkgs) poetry2nix;
       overrides = pyfinal: pyprev: rec {
+        mujoco-py =
+          (pyprev.mujoco-py.override {
+            preferWheel = false;
+            format = "pyproject";
+          })
+          .overridePythonAttrs (old: {
+            patches = (old.patches or []) ++ [./mujoco-py.patch];
+            env.NIX_CFLAGS_COMPILE = "-I${pkgs.mujoco}/include/";
+            preBuild = ''
+              # this line removes a bug where value of $HOME is set to a non-writable /homeless-shelter dir
+              echo 'MUJOCO PATH:' ${pkgs.mujoco}
+              export MUJOCO_PY_MUJOCO_PATH="${pkgs.mujoco}"
+              #export MUJOCO_PY_SO_PATH=/tmp
+              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${pkgs.mujoco}/bin:${pkgs.mujoco}/include
+            '';
+            #postBuild = "echo 'OUT'; echo $out; cd $out; echo 'REALPATH'; realpath .; echo 'LS'; ls; exit 1;";
+            buildInputs =
+              (old.buildInputs or [])
+              ++ (with pyprev; [
+                setuptools
+                fasteners
+                numpy
+                cython
+                cffi
+                pkgs.glew
+              ]);
+            propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [pkgs.mujoco];
+          });
         torch = pyprev.pytorch-bin.overridePythonAttrs (old: {
           src = pkgs.fetchurl {
             url = "https://download.pytorch.org/whl/cu115/torch-1.11.0%2Bcu115-cp39-cp39-linux_x86_64.whl";
