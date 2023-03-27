@@ -12,6 +12,7 @@ matplotlib = "^3.7.1"
 tensorboard = "^2.12.0"
 mujoco = "^2.3.3"
 imageio = "^2.26.1"
+mujoco-py = "^2.1.2.14"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"

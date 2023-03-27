@@ -17,34 +17,39 @@
         };
       };
       inherit (pkgs) poetry2nix;
-      overrides = pyfinal: pyprev: rec {
+      overrides = pyfinal: pyprev: let
+        mujoco = fetchTarball {
+          url = "https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz";
+          sha256 = "sha256:1lvppcdfca460sqnb0ryrach6lv1g9dwcjfim0dl4vmxg2ryaq7p";
+        };
+      in rec {
         mujoco-py =
           (pyprev.mujoco-py.override {
             preferWheel = false;
-            format = "pyproject";
           })
           .overridePythonAttrs (old: {
-            patches = (old.patches or []) ++ [./mujoco-py.patch];
-            env.NIX_CFLAGS_COMPILE = "-I${pkgs.mujoco}/include/";
+            env.NIX_CFLAGS_COMPILE = "-L${pkgs.mesa.osmesa}/lib";
             preBuild = ''
-              # this line removes a bug where value of $HOME is set to a non-writable /homeless-shelter dir
-              echo 'MUJOCO PATH:' ${pkgs.mujoco}
-              export MUJOCO_PY_MUJOCO_PATH="${pkgs.mujoco}"
-              #export MUJOCO_PY_SO_PATH=/tmp
-              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${pkgs.mujoco}/bin:${pkgs.mujoco}/include
+              echo OUTPUT OF 'ls pkgs.gcc-unwrapped.lib/lib'
+              ls "${pkgs.gcc-unwrapped.lib}/lib"
+              export MUJOCO_PY_MUJOCO_PATH="${mujoco}"
+              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${mujoco}/bin:${mujoco}/include:${pkgs.mesa.osmesa}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib
             '';
-            #postBuild = "echo 'OUT'; echo $out; cd $out; echo 'REALPATH'; realpath .; echo 'LS'; ls; exit 1;";
             buildInputs =
               (old.buildInputs or [])
-              ++ (with pyprev; [
+              ++ (with pyfinal; [
                 setuptools
                 fasteners
                 numpy
                 cython
                 cffi
                 pkgs.glew
+                mesa
+                pkgs.mesa
+                pkgs.stdenv.cc.cc.lib
+                pkgs.libGL
               ]);
-            propagatedBuildInputs = (old.propagatedBuildInputs or []) ++ [pkgs.mujoco];
+            patches = [./mujoco-py.patch];
           });
         torch = pyprev.pytorch-bin.overridePythonAttrs (old: {
           src = pkgs.fetchurl {

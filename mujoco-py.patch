@@ -1,13 +1,16 @@
+Unstaged changes after reset:
+M	mujoco_py/builder.py
 diff --git a/mujoco_py/builder.py b/mujoco_py/builder.py
-index 5280b2c..8005c1a 100644
+index 5280b2c..fe75a68 100644
 --- a/mujoco_py/builder.py
 +++ b/mujoco_py/builder.py
-@@ -211,6 +211,8 @@
-             include_dirs=[
-                 self.CYMJ_DIR_PATH,
-                 join(mujoco_path, 'include'),
-+                join('/nix/store/8y0f6mq7mhd3l4i9g1apzfwnclh9par5-mujoco-2.3.0/',
-+                     'include/mujoco'),
-                 np.get_include(),
-             ],
-             libraries=['mujoco210'],
+@@ -91,7 +91,8 @@ The easy solution is to `import mujoco_py` _before_ `import glfw`.
+ 
+     lockpath = os.path.join(os.path.dirname(cext_so_path), 'mujocopy-buildlock')
+ 
+-    with fasteners.InterProcessLock(lockpath):
++    from contextlib import nullcontext
++    with nullcontext() if os.path.exists(cext_so_path) else fasteners.InterProcessLock(lockpath):
+         mod = None
+         force_rebuild = os.environ.get('MUJOCO_PY_FORCE_REBUILD')
+         if force_rebuild:
