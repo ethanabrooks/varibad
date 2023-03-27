@@ -17,12 +17,11 @@
         };
       };
       inherit (pkgs) poetry2nix;
-      overrides = pyfinal: pyprev: let
-        mujoco = fetchTarball {
-          url = "https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz";
-          sha256 = "sha256:1lvppcdfca460sqnb0ryrach6lv1g9dwcjfim0dl4vmxg2ryaq7p";
-        };
-      in rec {
+      mujoco = fetchTarball {
+        url = "https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz";
+        sha256 = "sha256:1lvppcdfca460sqnb0ryrach6lv1g9dwcjfim0dl4vmxg2ryaq7p";
+      };
+      overrides = pyfinal: pyprev: rec {
         mujoco-py =
           (pyprev.mujoco-py.override {
             preferWheel = false;
@@ -33,7 +32,7 @@
               echo OUTPUT OF 'ls pkgs.gcc-unwrapped.lib/lib'
               ls "${pkgs.gcc-unwrapped.lib}/lib"
               export MUJOCO_PY_MUJOCO_PATH="${mujoco}"
-              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${mujoco}/bin:${mujoco}/include:${pkgs.mesa.osmesa}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib
+              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${mujoco}/bin:${mujoco}/include:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib
             '';
             buildInputs =
               (old.buildInputs or [])
@@ -46,7 +45,7 @@
                 pkgs.glew
                 mesa
                 pkgs.mesa
-                pkgs.stdenv.cc.cc.lib
+                #pkgs.stdenv.cc.cc.lib
                 pkgs.libGL
               ]);
             patches = [./mujoco-py.patch];
@@ -66,7 +65,9 @@
       };
     in {
       devShell = pkgs.mkShell {
-        LD_LIBRARY_PATH = "${pkgs.linuxPackages.nvidia_x11}/lib";
+        #LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${mujoco}/bin:${mujoco}/include:${pkgs.mesa.osmesa}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib
+        #${pkgs.linuxPackages.nvidia_x11}/lib";
+        LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.linuxPackages.nvidia_x11}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib";
         buildInputs = with pkgs; [
           alejandra
           poetry
