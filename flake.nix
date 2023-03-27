@@ -29,25 +29,16 @@
           .overridePythonAttrs (old: {
             env.NIX_CFLAGS_COMPILE = "-L${pkgs.mesa.osmesa}/lib";
             preBuild = ''
-              echo OUTPUT OF 'ls pkgs.gcc-unwrapped.lib/lib'
-              ls "${pkgs.gcc-unwrapped.lib}/lib"
               export MUJOCO_PY_MUJOCO_PATH="${mujoco}"
-              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${mujoco}/bin:${mujoco}/include:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib
+              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${mujoco}/bin:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib
             '';
             buildInputs =
-              (old.buildInputs or [])
-              ++ (with pyfinal; [
-                setuptools
-                fasteners
-                numpy
-                cython
-                cffi
-                pkgs.glew
-                mesa
+              old.buildInputs
+              ++ [
+                pyfinal.setuptools
                 pkgs.mesa
-                #pkgs.stdenv.cc.cc.lib
                 pkgs.libGL
-              ]);
+              ];
             patches = [./mujoco-py.patch];
           });
         torch = pyprev.pytorch-bin.overridePythonAttrs (old: {
@@ -65,8 +56,6 @@
       };
     in {
       devShell = pkgs.mkShell {
-        #LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${mujoco}/bin:${mujoco}/include:${pkgs.mesa.osmesa}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib
-        #${pkgs.linuxPackages.nvidia_x11}/lib";
         LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.linuxPackages.nvidia_x11}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib";
         buildInputs = with pkgs; [
           alejandra
