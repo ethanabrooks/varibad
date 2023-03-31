@@ -21,14 +21,14 @@ def semi_circle_goal_sampler():
 
 def circle_goal_sampler():
     r = 1.0
-    angle = random.uniform(0, 2*np.pi)
+    angle = random.uniform(0, 2 * np.pi)
     goal = r * np.array((np.cos(angle), np.sin(angle)))
     return goal
 
 
 GOAL_SAMPLERS = {
-    'semi-circle': semi_circle_goal_sampler,
-    'circle': circle_goal_sampler,
+    "semi-circle": semi_circle_goal_sampler,
+    "circle": circle_goal_sampler,
 }
 
 
@@ -90,22 +90,23 @@ class PointEnv(Env):
         assert self.action_space.contains(action), action
 
         self._state = self._state + 0.1 * action
-        reward = - np.linalg.norm(self._state - self._goal, ord=2)
+        reward = -np.linalg.norm(self._state - self._goal, ord=2)
         done = False
         ob = self._get_obs()
-        info = {'task': self.get_task()}
+        info = {"task": self.get_task()}
         return ob, reward, done, info
 
-    def visualise_behaviour(self,
-                            env,
-                            args,
-                            policy,
-                            iter_idx,
-                            encoder=None,
-                            image_folder=None,
-                            return_pos=False,
-                            **kwargs,
-                            ):
+    def visualise_behaviour(
+        self,
+        env,
+        args,
+        policy,
+        iter_idx,
+        encoder=None,
+        image_folder=None,
+        return_pos=False,
+        **kwargs,
+    ):
 
         num_episodes = args.max_rollouts_per_task
 
@@ -124,7 +125,9 @@ class PointEnv(Env):
             episode_latent_means = [[] for _ in range(num_episodes)]
             episode_latent_logvars = [[] for _ in range(num_episodes)]
         else:
-            episode_latent_samples = episode_latent_means = episode_latent_logvars = None
+            episode_latent_samples = (
+                episode_latent_means
+            ) = episode_latent_logvars = None
 
         # --- roll out policy ---
 
@@ -135,7 +138,7 @@ class PointEnv(Env):
         task = task.view(-1) if task is not None else None
 
         # initialise actions and rewards (used as initial input to policy if we have a recurrent policy)
-        if hasattr(args, 'hidden_size'):
+        if hasattr(args, "hidden_size"):
             hidden_state = torch.zeros((1, args.hidden_size)).to(device)
         else:
             hidden_state = None
@@ -152,7 +155,12 @@ class PointEnv(Env):
             if episode_idx == 0:
                 if encoder is not None:
                     # reset to prior
-                    curr_latent_sample, curr_latent_mean, curr_latent_logvar, hidden_state = encoder.prior(1)
+                    (
+                        curr_latent_sample,
+                        curr_latent_mean,
+                        curr_latent_logvar,
+                        hidden_state,
+                    ) = encoder.prior(1)
                     curr_latent_sample = curr_latent_sample[0].to(device)
                     curr_latent_mean = curr_latent_mean[0].to(device)
                     curr_latent_logvar = curr_latent_logvar[0].to(device)
@@ -160,9 +168,13 @@ class PointEnv(Env):
                     curr_latent_sample = curr_latent_mean = curr_latent_logvar = None
 
             if encoder is not None:
-                episode_latent_samples[episode_idx].append(curr_latent_sample[0].clone())
+                episode_latent_samples[episode_idx].append(
+                    curr_latent_sample[0].clone()
+                )
                 episode_latent_means[episode_idx].append(curr_latent_mean[0].clone())
-                episode_latent_logvars[episode_idx].append(curr_latent_logvar[0].clone())
+                episode_latent_logvars[episode_idx].append(
+                    curr_latent_logvar[0].clone()
+                )
 
             for step_idx in range(1, env._max_episode_steps + 1):
 
@@ -171,14 +183,23 @@ class PointEnv(Env):
                 else:
                     episode_prev_obs[episode_idx].append(state.clone())
                 # act
-                latent = utl.get_latent_for_policy(args,
-                                                   latent_sample=curr_latent_sample,
-                                                   latent_mean=curr_latent_mean,
-                                                   latent_logvar=curr_latent_logvar)
-                _, action = policy.act(state=state.view(-1), latent=latent, belief=belief, task=task,
-                                       deterministic=True)
+                latent = utl.get_latent_for_policy(
+                    args,
+                    latent_sample=curr_latent_sample,
+                    latent_mean=curr_latent_mean,
+                    latent_logvar=curr_latent_logvar,
+                )
+                _, action = policy.act(
+                    state=state.view(-1),
+                    latent=latent,
+                    belief=belief,
+                    task=task,
+                    deterministic=True,
+                )
 
-                (state, belief, task), (rew, rew_normalised), done, info = utl.env_step(env, action, args)
+                (state, belief, task), (rew, rew_normalised), done, info = utl.env_step(
+                    env, action, args
+                )
                 state = state.float().reshape((1, -1)).to(device)
                 task = task.view(-1) if task is not None else None
 
@@ -187,21 +208,41 @@ class PointEnv(Env):
 
                 if encoder is not None:
                     # update task embedding
-                    curr_latent_sample, curr_latent_mean, curr_latent_logvar, hidden_state = encoder(
-                        action.reshape(1, -1).float().to(device), state, rew.reshape(1, -1).float().to(device),
-                        hidden_state, return_prior=False)
+                    (
+                        curr_latent_sample,
+                        curr_latent_mean,
+                        curr_latent_logvar,
+                        hidden_state,
+                    ) = encoder(
+                        action.reshape(1, -1).float().to(device),
+                        state,
+                        rew.reshape(1, -1).float().to(device),
+                        hidden_state,
+                        return_prior=False,
+                    )
 
-                    episode_latent_samples[episode_idx].append(curr_latent_sample[0].clone())
-                    episode_latent_means[episode_idx].append(curr_latent_mean[0].clone())
-                    episode_latent_logvars[episode_idx].append(curr_latent_logvar[0].clone())
+                    episode_latent_samples[episode_idx].append(
+                        curr_latent_sample[0].clone()
+                    )
+                    episode_latent_means[episode_idx].append(
+                        curr_latent_mean[0].clone()
+                    )
+                    episode_latent_logvars[episode_idx].append(
+                        curr_latent_logvar[0].clone()
+                    )
 
                 episode_next_obs[episode_idx].append(state.clone())
                 episode_rewards[episode_idx].append(rew.clone())
                 episode_actions[episode_idx].append(action.clone())
 
-                if info[0]['done_mdp'] and not done:
-                    start_obs_raw = info[0]['start_state']
-                    start_obs_raw = torch.from_numpy(start_obs_raw).float().reshape((1, -1)).to(device)
+                if info[0]["done_mdp"] and not done:
+                    start_obs_raw = info[0]["start_state"]
+                    start_obs_raw = (
+                        torch.from_numpy(start_obs_raw)
+                        .float()
+                        .reshape((1, -1))
+                        .to(device)
+                    )
                     start_pos = start_obs_raw
                     break
 
@@ -227,14 +268,20 @@ class PointEnv(Env):
             ylim = (-1.3, 1.3)
         color_map = mpl.colors.ListedColormap(sns.color_palette("husl", num_episodes))
 
-        observations = torch.stack([episode_prev_obs[i]for i in range(num_episodes)]).cpu().numpy()
+        observations = (
+            torch.stack([episode_prev_obs[i] for i in range(num_episodes)])
+            .cpu()
+            .numpy()
+        )
         curr_task = env.get_task()
 
         # plot goal
-        axis.scatter(*curr_task, marker='x', color='k', s=50)
+        axis.scatter(*curr_task, marker="x", color="k", s=50)
         # radius where we get reward
-        if hasattr(self, 'goal_radius'):
-            circle1 = plt.Circle(curr_task, self.goal_radius, color='c', alpha=0.2, edgecolor='none')
+        if hasattr(self, "goal_radius"):
+            circle1 = plt.Circle(
+                curr_task, self.goal_radius, color="c", alpha=0.2, edgecolor="none"
+            )
             plt.gca().add_artist(circle1)
 
         for i in range(num_episodes):
@@ -246,13 +293,13 @@ class PointEnv(Env):
             if self.goal_sampler == semi_circle_goal_sampler:
                 angle = np.linspace(0, np.pi, 100)
             else:
-                angle = np.linspace(0, 2*np.pi, 100)
+                angle = np.linspace(0, 2 * np.pi, 100)
             goal_range = r * np.array((np.cos(angle), np.sin(angle)))
-            plt.plot(goal_range[0], goal_range[1], 'k--', alpha=0.1)
+            plt.plot(goal_range[0], goal_range[1], "k--", alpha=0.1)
 
             # plot trajectory
-            axis.plot(path[:, 0], path[:, 1], '-', color=color, label=i)
-            axis.scatter(*path[0, :2], marker='.', color=color, s=50)
+            axis.plot(path[:, 0], path[:, 1], "-", color=color, label=i)
+            axis.scatter(*path[0, :2], marker=".", color=color, s=50)
 
         plt.xlim(xlim)
         plt.ylim(ylim)
@@ -261,42 +308,68 @@ class PointEnv(Env):
         plt.legend()
         plt.tight_layout()
         if image_folder is not None:
-            plt.savefig('{}/{}_behaviour.png'.format(image_folder, iter_idx), dpi=300, bbox_inches='tight')
+            plt.savefig(
+                "{}/{}_behaviour.png".format(image_folder, iter_idx),
+                dpi=300,
+                bbox_inches="tight",
+            )
             plt.close()
         else:
             plt.show()
 
-        plt_rew = [episode_rewards[i][:episode_lengths[i]] for i in range(len(episode_rewards))]
+        plt_rew = [
+            episode_rewards[i][: episode_lengths[i]]
+            for i in range(len(episode_rewards))
+        ]
         plt.plot(torch.cat(plt_rew).view(-1).cpu().numpy())
-        plt.xlabel('env step')
-        plt.ylabel('reward per step')
+        plt.xlabel("env step")
+        plt.ylabel("reward per step")
         plt.tight_layout()
         if image_folder is not None:
-            plt.savefig('{}/{}_rewards.png'.format(image_folder, iter_idx), dpi=300, bbox_inches='tight')
+            plt.savefig(
+                "{}/{}_rewards.png".format(image_folder, iter_idx),
+                dpi=300,
+                bbox_inches="tight",
+            )
             plt.close()
         else:
             plt.show()
 
         if not return_pos:
-            return episode_latent_means, episode_latent_logvars, \
-                   episode_prev_obs, episode_next_obs, episode_actions, episode_rewards, \
-                   episode_returns
+            return (
+                episode_latent_means,
+                episode_latent_logvars,
+                episode_prev_obs,
+                episode_next_obs,
+                episode_actions,
+                episode_rewards,
+                episode_returns,
+            )
         else:
-            return episode_latent_means, episode_latent_logvars, \
-                   episode_prev_obs, episode_next_obs, episode_actions, episode_rewards, \
-                   episode_returns, pos
+            return (
+                episode_latent_means,
+                episode_latent_logvars,
+                episode_prev_obs,
+                episode_next_obs,
+                episode_actions,
+                episode_rewards,
+                episode_returns,
+                pos,
+            )
 
 
 class SparsePointEnv(PointEnv):
-    """ Reward is L2 distance given only within goal radius """
+    """Reward is L2 distance given only within goal radius"""
 
-    def __init__(self, goal_radius=0.2, max_episode_steps=100, goal_sampler='semi-circle'):
+    def __init__(
+        self, goal_radius=0.2, max_episode_steps=100, goal_sampler="semi-circle"
+    ):
         super().__init__(max_episode_steps=max_episode_steps, goal_sampler=goal_sampler)
         self.goal_radius = goal_radius
         self.reset_task()
 
     def sparsify_rewards(self, r):
-        ''' zero out rewards when outside the goal radius '''
+        """zero out rewards when outside the goal radius"""
         mask = (r >= -self.goal_radius).astype(np.float32)
         r = r * mask
         return r
@@ -311,6 +384,6 @@ class SparsePointEnv(PointEnv):
         # make sparse rewards positive
         if reward >= -self.goal_radius:
             sparse_reward += 1
-        d.update({'sparse_reward': sparse_reward})
-        d.update({'dense_reward': reward})
+        d.update({"sparse_reward": sparse_reward})
+        d.update({"dense_reward": reward})
         return ob, sparse_reward, done, d

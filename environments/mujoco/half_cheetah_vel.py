@@ -42,9 +42,9 @@ class HalfCheetahVelEnv(HalfCheetahEnv):
         observation = self._get_obs()
         reward = forward_reward - ctrl_cost
         done = False
-        infos = dict(reward_forward=forward_reward,
-                     reward_ctrl=-ctrl_cost,
-                     task=self.get_task())
+        infos = dict(
+            reward_forward=forward_reward, reward_ctrl=-ctrl_cost, task=self.get_task()
+        )
         return observation, reward, done, infos
 
     def set_task(self, task):
@@ -66,11 +66,12 @@ class HalfCheetahVelEnv(HalfCheetahEnv):
 
 
 class HalfCheetahRandVelOracleEnv(HalfCheetahVelEnv):
-
     def _get_obs(self):
-        return np.concatenate([
-            self.sim.data.qpos.flat[1:],
-            self.sim.data.qvel.flat,
-            self.get_body_com("torso").flat,
-            [self.goal_velocity]
-        ])
+        return np.concatenate(
+            [
+                self.sim.data.qpos.flat[1:],
+                self.sim.data.qvel.flat,
+                self.get_body_com("torso").flat,
+                [self.goal_velocity],
+            ]
+        )
