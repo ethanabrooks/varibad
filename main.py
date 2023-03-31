@@ -53,8 +53,12 @@ from metalearner import MetaLearner
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-type", default="gridworld_varibad")
+    subparsers = parser.add_subparsers()
+    replay_buffer_parser = subparsers.add_parser("replay-buffer")
+    replay_buffer_parser.add_argument("--size", type=int, default=999999)
     args, rest_args = parser.parse_known_args()
     env = args.env_type
+    replay_buffer_args = args
 
     # --- GridWorld ---
 
@@ -195,7 +199,7 @@ def main():
         if args.disable_metalearner:
             # If `disable_metalearner` is true, the file `learner.py` will be used instead of `metalearner.py`.
             # This is a stripped down version without encoder, decoder, stochastic latent variables, etc.
-            learner = Learner(args)
+            learner = Learner(args, replay_buffer_args=replay_buffer_args)
         else:
             learner = MetaLearner(args)
         learner.train()

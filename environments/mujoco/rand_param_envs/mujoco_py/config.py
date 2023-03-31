@@ -14,6 +14,8 @@ def get_key_path():
 
 
 def init_config():
+    check_numpy_version()
+    return
     global _key_path, mjpro_path
 
     _key_path = os.environ.get("MUJOCO_PY_MJKEY_PATH")

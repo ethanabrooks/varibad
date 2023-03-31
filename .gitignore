@@ -3,6 +3,7 @@
 __pycache__
 .idea
 
+buffers/
 logs/
 scripts/
 docker/

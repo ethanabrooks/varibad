@@ -5,10 +5,15 @@ Can be used to train for good average performance, or for the oracle environment
 
 import os
 import time
+from typing import Optional
 
 import gym
 import numpy as np
 import torch
+from torchrl.data import ReplayBuffer
+from torchrl.data.replay_buffers import LazyMemmapStorage
+from tensordict import TensorDict
+from torchsnapshot import Snapshot
 
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
@@ -27,8 +32,7 @@ class Learner:
     Learner (no meta-learning), can be used to train avg/oracle/belief-oracle policies.
     """
 
-    def __init__(self, args):
-
+    def __init__(self, args, replay_buffer_args):
         self.args = args
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
@@ -41,6 +45,24 @@ class Learner:
 
         # initialise tensorboard logger
         self.logger = TBLogger(self.args, self.args.exp_label)
+
+        # initialise replay buffer
+        try:
+            replay_buffer_size = replay_buffer_args.size
+            use_replay_buffer = True
+        except AttributeError:
+            replay_buffer_size = None
+            use_replay_buffer = False
+
+        if use_replay_buffer:
+            replay_buffer_path = os.path.join(
+                self.logger.full_output_folder, "replay-buffer"
+            )
+            self.replay_buffer = ReplayBuffer(
+                LazyMemmapStorage(replay_buffer_size, scratch_dir=replay_buffer_path)
+            )
+        else:
+            self.replay_buffer = None
 
         # initialise environments
         self.envs = make_vec_envs(
@@ -191,6 +213,7 @@ class Learner:
 
             # rollout policies for a few steps
             for step in range(self.args.policy_num_steps):
+                current_state = state
 
                 # sample actions from policy
                 with torch.no_grad():
@@ -210,6 +233,7 @@ class Learner:
                     done,
                     infos,
                 ) = utl.env_step(self.envs, action, self.args)
+                next_state = state
 
                 # create mask for episode ends
                 masks_done = torch.FloatTensor(
@@ -230,6 +254,27 @@ class Learner:
                         self.envs, self.args, indices=done_indices, state=state
                     )
 
+                done_tensor = torch.from_numpy(np.array(done, dtype=float)).unsqueeze(1)
+
+                # add experience to replay buffer
+                if self.replay_buffer is not None:
+                    done_mdp = torch.tensor([i["done_mdp"] for i in infos])
+                    done_mdp = done_mdp[..., None]
+                    self.replay_buffer.add(
+                        TensorDict(
+                            dict(
+                                state=current_state[:1],
+                                task=task[:1],
+                                actions=action[:1],
+                                rewards=rew_raw[:1],
+                                done=done_tensor[:1],
+                                done_mdp=done_mdp[:1],
+                                next_state=next_state[:1],
+                            ),
+                            batch_size=[1],
+                        )
+                    )
+
                 # add experience to policy buffer
                 self.policy_storage.insert(
                     state=state,
@@ -241,7 +286,7 @@ class Learner:
                     value_preds=value,
                     masks=masks_done,
                     bad_masks=bad_masks,
-                    done=torch.from_numpy(np.array(done, dtype=float)).unsqueeze(1),
+                    done=done_tensor,
                 )
 
                 self.frames += self.args.num_processes
@@ -366,10 +411,16 @@ class Learner:
 
             for idx_label in idx_labels:
 
-                torch.save(
-                    self.policy.actor_critic,
-                    os.path.join(save_path, f"policy{idx_label}.pt"),
-                )
+                state = dict(actor_critic=self.policy.actor_critic)
+                if self.replay_buffer is not None:
+                    state.update(replay_buffer=self.replay_buffer)
+                Snapshot.take(path=save_path, app_state=state)
+                print(f"Saved state to: {save_path}")
+                if self.replay_buffer is not None:
+                    print(
+                        f"Replay buffer contins {len(self.replay_buffer)} transitions."
+                    )
+                    print()
 
                 # save normalisation params of envs
                 if self.args.norm_rew_for_policy:
