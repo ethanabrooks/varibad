@@ -13,6 +13,7 @@ from tensordict import TensorDict
 from torchrl.data import ReplayBuffer
 from torchrl.data.replay_buffers import LazyMemmapStorage
 from torchsnapshot import Snapshot
+import wandb
 
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
@@ -400,7 +401,8 @@ class Learner:
 
         # save model
         iter_idx = self.iter_idx + 1
-        if (iter_idx % self.args.save_interval == 0) or (iter_idx == self.num_updates):
+        last_iter = iter_idx == self.num_updates
+        if (iter_idx % self.args.save_interval == 0) or last_iter:
             save_path = os.path.join(self.logger.full_output_folder, "models")
             if not os.path.exists(save_path):
                 os.mkdir(save_path)
@@ -421,6 +423,14 @@ class Learner:
                         f"Replay buffer contins {len(self.replay_buffer)} transitions."
                     )
                     print()
+
+                if last_iter and (wandb.run is not None):
+                    artifact = wandb.Artifact(
+                        name=f"{self.args.env_name}-{self.args.exp_label}",
+                        type="dataset",
+                    )
+                    artifact.add_dir(save_path)
+                    wandb.run.log_artifact(artifact)
 
                 # save normalisation params of envs
                 if self.args.norm_rew_for_policy:
