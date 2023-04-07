@@ -16,6 +16,7 @@ seaborn = "^0.12.2"
 torchrl = "^0.0.5"
 tensordict = "^0.1.0"
 torchsnapshot = "^0.1.0"
+wandb = "^0.14.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
