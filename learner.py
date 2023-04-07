@@ -5,14 +5,13 @@ Can be used to train for good average performance, or for the oracle environment
 
 import os
 import time
-from typing import Optional
 
 import gym
 import numpy as np
 import torch
+from tensordict import TensorDict
 from torchrl.data import ReplayBuffer
 from torchrl.data.replay_buffers import LazyMemmapStorage
-from tensordict import TensorDict
 from torchsnapshot import Snapshot
 
 from algorithms.a2c import A2C
