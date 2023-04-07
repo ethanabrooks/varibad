@@ -7,6 +7,8 @@ import warnings
 
 import numpy as np
 import torch
+import wandb
+import tomli
 
 # get configs
 from config.gridworld import args_grid_belief_oracle, args_grid_rl2, args_grid_varibad
@@ -191,6 +193,11 @@ def main():
 
     # begin training (loop through all passed seeds)
     seed_list = [args.seed] if isinstance(args.seed, int) else args.seed
+
+    with open("pyproject.toml", "rb") as f:
+        pyproject = tomli.load(f)
+    project = pyproject["tool"]["poetry"]["name"]
+    wandb.init(project=project, sync_tensorboard=True)
     for seed in seed_list:
         print("training", seed)
         args.seed = seed
@@ -203,6 +210,7 @@ def main():
         else:
             learner = MetaLearner(args)
         learner.train()
+    wandb.finish()
 
 
 if __name__ == "__main__":
