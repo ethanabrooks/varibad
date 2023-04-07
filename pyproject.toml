@@ -18,13 +18,13 @@ tensordict = "^0.1.0"
 torchsnapshot = "^0.1.0"
 wandb = "^0.14.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 black = "^22.6.0"
 ipdb = "^0.13.9"
 ipython = "^8.4.0"
-pre-commit = "^2.20.0"
 mypy = "^0.971"
 flake8 = "^5.0.4"
+pre-commit = "^3.2.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
