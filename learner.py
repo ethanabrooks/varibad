@@ -31,7 +31,7 @@ class Learner:
     Learner (no meta-learning), can be used to train avg/oracle/belief-oracle policies.
     """
 
-    def __init__(self, args, replay_buffer_args):
+    def __init__(self, args, replay_buffer_args, debug):
         self.args = args
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
@@ -43,7 +43,7 @@ class Learner:
         self.iter_idx = -1
 
         # initialise tensorboard logger
-        self.logger = TBLogger(self.args, self.args.exp_label)
+        self.logger = TBLogger(self.args, self.args.exp_label, debug)
 
         # initialise replay buffer
         try:

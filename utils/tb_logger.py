@@ -9,7 +9,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class TBLogger:
-    def __init__(self, args, exp_label):
+    def __init__(self, args, exp_label, debug=False):
         self.output_name = (
             exp_label
             + "_"
@@ -21,6 +21,8 @@ class TBLogger:
             log_dir = args.results_log_dir
         except AttributeError:
             log_dir = args["results_log_dir"]
+        if debug:
+            log_dir = "/tmp"
 
         if log_dir is None:
             dir_path = os.path.abspath(
