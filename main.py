@@ -200,7 +200,11 @@ def main():
         with open("pyproject.toml", "rb") as f:
             pyproject = tomli.load(f)
         project = pyproject["tool"]["poetry"]["name"]
-        wandb.init(project=project, sync_tensorboard=True)
+        wandb.init(
+            project=project,
+            name=f"{args.env_name}-{args.exp_label}",
+            sync_tensorboard=True,
+        )
     for seed in seed_list:
         print("training", seed)
         args.seed = seed
