@@ -399,7 +399,8 @@ class Learner:
             )
 
         # save model
-        if (self.iter_idx + 1) % self.args.save_interval == 0:
+        iter_idx = self.iter_idx + 1
+        if (iter_idx % self.args.save_interval == 0) or (iter_idx == self.num_updates):
             save_path = os.path.join(self.logger.full_output_folder, "models")
             if not os.path.exists(save_path):
                 os.mkdir(save_path)
