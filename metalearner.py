@@ -472,6 +472,7 @@ class MetaLearner:
                 compute_kl_loss=self.vae.compute_kl_loss,
                 tasks=self.train_tasks,
             )
+            self.logger.save_pngs(self.iter_idx)
 
         # --- evaluate policy ----
 

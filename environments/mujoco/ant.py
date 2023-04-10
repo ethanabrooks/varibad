@@ -271,7 +271,7 @@ class AntEnv(MujocoEnv):
 
         plt.tight_layout()
         if image_folder is not None:
-            plt.savefig("{}/{}_behaviour".format(image_folder, iter_idx))
+            plt.savefig("{}/behaviour".format(image_folder))
             plt.close()
         else:
             plt.show()

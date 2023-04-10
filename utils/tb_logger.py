@@ -1,7 +1,9 @@
 import datetime
 import json
 import os
+from glob import glob
 
+import imageio
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
@@ -69,3 +71,12 @@ class TBLogger:
 
     def add(self, name, value, x_pos):
         self.writer.add_scalar(name, value, x_pos)
+
+    def save_pngs(self, step: int):
+        path_pattern = os.path.join(self.full_output_folder, "*.png")
+        for path in glob(path_pattern):
+            print("Saving png:", path)
+            array = imageio.imread(path)
+            tensor = torch.tensor(array)
+            basename = os.path.basename(path)
+            self.writer.add_image(basename, tensor, dataformats="HWC", global_step=step)

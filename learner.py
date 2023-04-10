@@ -350,6 +350,7 @@ class Learner:
                 ret_rms=ret_rms,
                 tasks=self.train_tasks,
             )
+            self.logger.save_pngs(self.iter_idx)
 
         # --- evaluate policy ----
 

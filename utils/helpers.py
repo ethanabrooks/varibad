@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+import wandb
 
 from environments.parallel_envs import make_vec_envs
 
