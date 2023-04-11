@@ -202,7 +202,7 @@ def main():
             project=project,
             name=f"{args.env_name}-{args.exp_label}",
             sync_tensorboard=True,
-            tags=["single-replay-buffer", "new-format"],
+            tags=["multi-replay-buffers"],
         )
     for seed in seed_list:
         print("training", seed)
