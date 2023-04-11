@@ -49,11 +49,14 @@ class Learner:
         # initialise replay buffer
         if use_replay_buffer:
             self.replay_buffer_size = int(args.num_frames) // args.num_processes
-            self.replay_buffer = self.initialize_replay_buffer(0)
+            self.replay_buffers = [
+                self.initialize_replay_buffer(i) for i in range(args.num_processes)
+            ]
         else:
-            self.replay_buffer = None
+            self.replay_buffers = None
 
         # initialise environments
+        print("Making environments...", end=" ")
         self.envs = make_vec_envs(
             env_name=args.env_name,
             seed=args.seed,
@@ -65,6 +68,7 @@ class Learner:
             ret_rms=None,
             tasks=None,
         )
+        print("✓")
 
         if self.args.single_task_mode:
             # get the current tasks (which will be num_process many different tasks)
@@ -254,26 +258,26 @@ class Learner:
                 done_tensor = torch.from_numpy(np.array(done, dtype=float)).unsqueeze(1)
 
                 # add experience to replay buffer
-                if self.replay_buffer is not None:
+                if self.replay_buffers is not None:
                     done_mdp = torch.tensor([i["done_mdp"] for i in infos])
                     done_mdp = done_mdp[..., None]
-                    assert (
-                        len(self.replay_buffer) < self.replay_buffer_size
-                    ), "Exceeded replay buffer size."
-                    self.replay_buffer.add(
-                        TensorDict(
-                            dict(
-                                state=current_state[:1],
-                                task=task[:1],
-                                actions=action[:1],
-                                rewards=rew_raw[:1],
-                                done=done_tensor[:1],
-                                done_mdp=done_mdp[:1],
-                                next_state=next_state[:1],
-                            ),
-                            batch_size=[1],
-                        )
+                    batch = TensorDict(
+                        dict(
+                            state=current_state,
+                            task=task,
+                            actions=action,
+                            rewards=rew_raw,
+                            done=done_tensor,
+                            done_mdp=done_mdp,
+                            next_state=next_state,
+                        ),
+                        batch_size=[self.args.num_processes],
                     )
+                    for buffer, transition in zip(self.replay_buffers, batch):
+                        assert (
+                            len(buffer) < self.replay_buffer_size
+                        ), "Exceeded replay buffer size."
+                        buffer.add(transition)
 
                 # add experience to policy buffer
                 self.policy_storage.insert(
@@ -415,16 +419,18 @@ class Learner:
                 state = dict(actor_critic=self.policy.actor_critic)
                 Snapshot.take(path=save_path, app_state=state)
                 print(f"Saved state to: {save_path}")
-                if last_iter and self.replay_buffer is not None:
-                    if len(self.replay_buffer) == 0:
-                        print("Warning: replay buffer is empty.")
+                if last_iter and self.replay_buffers is not None:
                     replay_buffer_save_path = os.path.join(save_path, "replay-buffers")
-                    state = {str(0): self.replay_buffer}
-                    Snapshot.take(path=replay_buffer_save_path, app_state=state)
-                    print(f"Saved replay-buffer to: {replay_buffer_save_path}")
-                    print(
-                        f"Replay buffer contains {len(self.replay_buffer)} transitions."
+                    Snapshot.take(
+                        path=replay_buffer_save_path,
+                        app_state={
+                            str(i): b for i, b in enumerate(self.replay_buffers)
+                        },
                     )
+                    print(f"Saved replay-buffer to: {replay_buffer_save_path}")
+                    print("Replay buffer sizes:")
+                    for i, buffer in enumerate(self.replay_buffers):
+                        print(f"{i}: {len(buffer)} / {self.replay_buffer_size}")
                     print()
 
                     if wandb.run is not None:
