@@ -3,12 +3,12 @@ import warnings
 import gym
 import numpy as np
 import torch
-from torch.nn import functional as F
 import torch.nn as nn
+from torch.nn import functional as F
 
-from models.decoder import StateTransitionDecoder, RewardDecoder, TaskDecoder
+from models.decoder import RewardDecoder, StateTransitionDecoder, TaskDecoder
 from models.encoder import RNNEncoder
-from utils.helpers import get_task_dim, get_num_tasks
+from utils.helpers import get_num_tasks, get_task_dim
 from utils.storage_vae import RolloutStorageVAE
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
