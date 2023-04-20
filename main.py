@@ -56,13 +56,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-type", default="gridworld_varibad")
     parser.add_argument("--debug", action="store_true")
-    subparsers = parser.add_subparsers()
-    replay_buffer_parser = subparsers.add_parser("replay-buffer")
-    replay_buffer_parser.add_argument("--size", type=int, default=999999)
+    parser.add_argument("--replay_buffer", action="store_true")
     args, rest_args = parser.parse_known_args()
+    use_replay_buffer = args.replay_buffer
     debug = args.debug
     env = args.env_type
-    replay_buffer_args = args
 
     # --- GridWorld ---
 
@@ -204,6 +202,7 @@ def main():
             project=project,
             name=f"{args.env_name}-{args.exp_label}",
             sync_tensorboard=True,
+            tags=["single-replay-buffer"],
         )
     for seed in seed_list:
         print("training", seed)
@@ -213,7 +212,7 @@ def main():
         if args.disable_metalearner:
             # If `disable_metalearner` is true, the file `learner.py` will be used instead of `metalearner.py`.
             # This is a stripped down version without encoder, decoder, stochastic latent variables, etc.
-            learner = Learner(args, replay_buffer_args=replay_buffer_args, debug=debug)
+            learner = Learner(args, use_replay_buffer=use_replay_buffer, debug=debug)
         else:
             learner = MetaLearner(args)
         learner.train()
