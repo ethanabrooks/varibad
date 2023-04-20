@@ -32,7 +32,7 @@ class Learner:
     Learner (no meta-learning), can be used to train avg/oracle/belief-oracle policies.
     """
 
-    def __init__(self, args, replay_buffer_args, debug):
+    def __init__(self, args, use_replay_buffer: bool, debug: bool):
         self.args = args
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
@@ -44,23 +44,12 @@ class Learner:
         self.iter_idx = -1
 
         # initialise tensorboard logger
-        self.logger = TBLogger(self.args, self.args.exp_label, debug)
+        self.logger = TBLogger(self.args, self.args.exp_label, debug=debug)
 
         # initialise replay buffer
-        try:
-            replay_buffer_size = replay_buffer_args.size
-            use_replay_buffer = True
-        except AttributeError:
-            replay_buffer_size = None
-            use_replay_buffer = False
-
         if use_replay_buffer:
-            replay_buffer_path = os.path.join(
-                self.logger.full_output_folder, "replay-buffer"
-            )
-            self.replay_buffer = ReplayBuffer(
-                LazyMemmapStorage(replay_buffer_size, scratch_dir=replay_buffer_path)
-            )
+            self.replay_buffer_size = int(args.num_frames) // args.num_processes
+            self.replay_buffer = self.initialize_replay_buffer()
         else:
             self.replay_buffer = None
 
@@ -123,6 +112,14 @@ class Learner:
         self.policy_storage = self.initialise_policy_storage()
         self.policy = self.initialise_policy()
 
+    def initialize_replay_buffer(self):
+        replay_buffer_path = os.path.join(
+            self.logger.full_output_folder, "replay-buffer"
+        )
+        return ReplayBuffer(
+            LazyMemmapStorage(self.replay_buffer_size, scratch_dir=replay_buffer_path)
+        )
+
     def initialise_policy_storage(self):
         return OnlineStorage(
             args=self.args,
@@ -138,7 +135,6 @@ class Learner:
         )
 
     def initialise_policy(self):
-
         # initialise policy network
         policy_net = Policy(
             args=self.args,
@@ -210,7 +206,6 @@ class Learner:
             self.log(None, None, start_time)
 
         for self.iter_idx in range(self.num_updates):
-
             # rollout policies for a few steps
             for step in range(self.args.policy_num_steps):
                 current_state = state
@@ -260,6 +255,9 @@ class Learner:
                 if self.replay_buffer is not None:
                     done_mdp = torch.tensor([i["done_mdp"] for i in infos])
                     done_mdp = done_mdp[..., None]
+                    assert (
+                        len(self.replay_buffer) < self.replay_buffer_size
+                    ), "Exceeded replay buffer size."
                     self.replay_buffer.add(
                         TensorDict(
                             dict(
@@ -355,7 +353,6 @@ class Learner:
         # --- evaluate policy ----
 
         if (self.iter_idx + 1) % self.args.eval_interval == 0:
-
             ret_rms = self.envs.venv.ret_rms if self.args.norm_rew_for_policy else None
 
             returns_per_episode = utl_eval.evaluate(
@@ -413,19 +410,24 @@ class Learner:
                 idx_labels.append(int(self.iter_idx))
 
             for idx_label in idx_labels:
-
                 state = dict(actor_critic=self.policy.actor_critic)
-                if self.replay_buffer is not None:
-                    state.update(replay_buffer=self.replay_buffer)
                 Snapshot.take(path=save_path, app_state=state)
                 print(f"Saved state to: {save_path}")
-                if self.replay_buffer is not None:
+                if (
+                    last_iter
+                    and (wandb.run is not None)
+                    and self.replay_buffer is not None
+                ):
+                    if len(self.replay_buffer) == 0:
+                        print("Warning: replay buffer is empty.")
+                    state = dict(replay_buffer=self.replay_buffer)
+                    Snapshot.take(path=save_path, app_state=state)
+                    print(f"Saved replay-buffer to: {save_path}")
                     print(
-                        f"Replay buffer contins {len(self.replay_buffer)} transitions."
+                        f"Replay buffer contains {len(self.replay_buffer)} transitions."
                     )
                     print()
 
-                if last_iter and (wandb.run is not None):
                     artifact = wandb.Artifact(
                         name=f"{self.args.env_name}-{self.args.exp_label}",
                         type="dataset",
@@ -447,7 +449,6 @@ class Learner:
         if ((self.iter_idx + 1) % self.args.log_interval == 0) and (
             train_stats is not None
         ):
-
             train_stats, _ = train_stats
 
             self.logger.add("policy_losses/value_loss", train_stats[0], self.iter_idx)
