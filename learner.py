@@ -98,7 +98,10 @@ class Learner:
 
         # calculate what the maximum length of the trajectories is
         args.max_trajectory_len = self.envs._max_episode_steps
-        args.max_trajectory_len *= self.args.max_rollouts_per_task
+        if self.args.max_rollouts_per_task is None:
+            args.max_trajectory_len = None
+        else:
+            args.max_trajectory_len *= self.args.max_rollouts_per_task
 
         # get policy input dimensions
         self.args.state_dim = self.envs.observation_space.shape[0]

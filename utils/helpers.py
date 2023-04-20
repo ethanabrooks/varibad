@@ -10,7 +10,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-import wandb
 
 from environments.parallel_envs import make_vec_envs
 
@@ -140,7 +139,6 @@ def select_action(
 def get_latent_for_policy(
     args, latent_sample=None, latent_mean=None, latent_logvar=None
 ):
-
     if (latent_sample is None) and (latent_mean is None) and (latent_logvar is None):
         return None
 
@@ -336,6 +334,14 @@ def update_mean_var_count_from_moments(
     new_count = tot_count
 
     return new_mean, new_var, new_count
+
+
+def positive_int(value):
+    """Convert a string value to boolean."""
+    value = int(value)
+    if value <= 0:
+        return None
+    return value
 
 
 def boolean_argument(value):

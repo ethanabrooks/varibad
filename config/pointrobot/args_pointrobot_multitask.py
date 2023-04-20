@@ -1,8 +1,6 @@
 import argparse
 
-import torch
-
-from utils.helpers import boolean_argument
+from utils.helpers import boolean_argument, positive_int
 
 
 def get_args(rest_args):
@@ -14,7 +12,7 @@ def get_args(rest_args):
     parser.add_argument(
         "--num_frames", type=int, default=5e7, help="number of frames to train"
     )
-    parser.add_argument("--max_rollouts_per_task", type=int, default=1)
+    parser.add_argument("--max_rollouts_per_task", type=positive_int, default=1)
     parser.add_argument(
         "--exp_label", default="multitask", help="label for the experiment"
     )
