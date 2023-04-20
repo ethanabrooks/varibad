@@ -258,6 +258,7 @@ class Learner:
 
             # clean up after update
             self.policy_storage.after_update()
+        self.envs.close()
 
     def get_value(self, state, belief, task):
         return self.policy.actor_critic.get_value(
