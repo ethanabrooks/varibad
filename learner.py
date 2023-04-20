@@ -13,8 +13,8 @@ from tensordict import TensorDict
 from torchrl.data import ReplayBuffer
 from torchrl.data.replay_buffers import LazyMemmapStorage
 from torchsnapshot import Snapshot
-import wandb
 
+import wandb
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
 from algorithms.ppo import PPO
@@ -49,7 +49,7 @@ class Learner:
         # initialise replay buffer
         if use_replay_buffer:
             self.replay_buffer_size = int(args.num_frames) // args.num_processes
-            self.replay_buffer = self.initialize_replay_buffer()
+            self.replay_buffer = self.initialize_replay_buffer(0)
         else:
             self.replay_buffer = None
 
@@ -112,10 +112,12 @@ class Learner:
         self.policy_storage = self.initialise_policy_storage()
         self.policy = self.initialise_policy()
 
-    def initialize_replay_buffer(self):
+    def initialize_replay_buffer(self, i: int):
         replay_buffer_path = os.path.join(
-            self.logger.full_output_folder, "replay-buffer"
+            self.logger.full_output_folder, "replay-buffers", str(i)
         )
+        if not os.path.exists(replay_buffer_path):
+            os.makedirs(replay_buffer_path)
         return ReplayBuffer(
             LazyMemmapStorage(self.replay_buffer_size, scratch_dir=replay_buffer_path)
         )
@@ -413,27 +415,25 @@ class Learner:
                 state = dict(actor_critic=self.policy.actor_critic)
                 Snapshot.take(path=save_path, app_state=state)
                 print(f"Saved state to: {save_path}")
-                if (
-                    last_iter
-                    and (wandb.run is not None)
-                    and self.replay_buffer is not None
-                ):
+                if last_iter and self.replay_buffer is not None:
                     if len(self.replay_buffer) == 0:
                         print("Warning: replay buffer is empty.")
-                    state = dict(replay_buffer=self.replay_buffer)
-                    Snapshot.take(path=save_path, app_state=state)
-                    print(f"Saved replay-buffer to: {save_path}")
+                    replay_buffer_save_path = os.path.join(save_path, "replay-buffers")
+                    state = {str(0): self.replay_buffer}
+                    Snapshot.take(path=replay_buffer_save_path, app_state=state)
+                    print(f"Saved replay-buffer to: {replay_buffer_save_path}")
                     print(
                         f"Replay buffer contains {len(self.replay_buffer)} transitions."
                     )
                     print()
 
-                    artifact = wandb.Artifact(
-                        name=f"{self.args.env_name}-{self.args.exp_label}",
-                        type="dataset",
-                    )
-                    artifact.add_dir(save_path)
-                    wandb.run.log_artifact(artifact)
+                    if wandb.run is not None:
+                        artifact = wandb.Artifact(
+                            name=f"{self.args.env_name}-{self.args.exp_label}",
+                            type="dataset",
+                        )
+                        artifact.add_dir(replay_buffer_save_path)
+                        wandb.run.log_artifact(artifact)
 
                 # save normalisation params of envs
                 if self.args.norm_rew_for_policy:
