@@ -6,9 +6,10 @@ import argparse
 import warnings
 
 import numpy as np
-import torch
-import wandb
 import tomli
+import torch
+
+import wandb
 
 # get configs
 from config.gridworld import args_grid_belief_oracle, args_grid_rl2, args_grid_varibad
@@ -202,7 +203,7 @@ def main():
             project=project,
             name=f"{args.env_name}-{args.exp_label}",
             sync_tensorboard=True,
-            tags=["multi-replay-buffers"],
+            tags=["multi-replay-buffers", "single-task-per-buffer"],
         )
     for seed in seed_list:
         print("training", seed)
