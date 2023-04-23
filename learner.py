@@ -445,7 +445,7 @@ class Learner:
                             type="dataset",
                         )
                         artifact.add_dir(replay_buffer_save_path)
-                        wandb.run.log_artifact(artifact)
+                        self.run.log_artifact(artifact)
 
                 # save normalisation params of envs
                 if self.args.norm_rew_for_policy:

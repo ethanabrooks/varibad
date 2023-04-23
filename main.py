@@ -4,6 +4,7 @@ Takes a flag --env-type (see below for choices) and loads the parameters from th
 """
 import argparse
 import warnings
+from typing import Optional
 
 import numpy as np
 import tomli
@@ -51,6 +52,13 @@ from config.pointrobot import (
 from environments.parallel_envs import make_vec_envs
 from learner import Learner
 from metalearner import MetaLearner
+
+
+def get_tags(max_rollouts_per_task: Optional[int]):
+    tags = ["multi-replay-buffers"]
+    if max_rollouts_per_task is None:
+        tags += ["single-task-histories"]
+    return tags
 
 
 def main():
@@ -203,7 +211,7 @@ def main():
             project=project,
             name=f"{args.env_name}-{args.exp_label}",
             sync_tensorboard=True,
-            tags=["multi-replay-buffers", "single-task-per-buffer"],
+            tags=get_tags(args.max_rollouts_per_task),
         )
     for seed in seed_list:
         print("training", seed)
