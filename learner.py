@@ -306,7 +306,10 @@ class Learner:
             run_stats = [action, self.policy_storage.action_log_probs, value]
             if train_stats is not None:
                 with torch.no_grad():
-                    self.log(run_stats, train_stats, start_time)
+                    try:
+                        self.log(run_stats, train_stats, start_time)
+                    except (ConnectionResetError, BrokenPipeError) as e:
+                        print(e)
 
             # clean up after update
             self.policy_storage.after_update()
