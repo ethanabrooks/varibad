@@ -5,6 +5,7 @@ Can be used to train for good average performance, or for the oracle environment
 
 import os
 import time
+from typing import Optional
 
 import gym
 import numpy as np
@@ -13,6 +14,7 @@ from tensordict import TensorDict
 from torchrl.data import ReplayBuffer
 from torchrl.data.replay_buffers import LazyMemmapStorage
 from torchsnapshot import Snapshot
+from wandb.sdk.wandb_run import Run
 
 import wandb
 from algorithms.a2c import A2C
@@ -32,8 +34,10 @@ class Learner:
     Learner (no meta-learning), can be used to train avg/oracle/belief-oracle policies.
     """
 
-    def __init__(self, args, use_replay_buffer: bool, debug: bool):
+    def __init__(self, args, use_replay_buffer: bool, debug: bool, run: Optional[Run]):
         self.args = args
+        self.run = run
+
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
         # calculate number of updates and keep count of frames/iterations
@@ -439,7 +443,7 @@ class Learner:
                         print(f"{i}: {len(buffer)} / {self.replay_buffer_size}")
                     print()
 
-                    if wandb.run is not None:
+                    if self.run is not None:
                         artifact = wandb.Artifact(
                             name=f"{self.args.env_name}-{self.args.exp_label}",
                             type="dataset",

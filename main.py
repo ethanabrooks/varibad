@@ -3,12 +3,17 @@ Main scripts to start experiments.
 Takes a flag --env-type (see below for choices) and loads the parameters from the respective config file.
 """
 import argparse
+import datetime
+import urllib
 import warnings
 from typing import Optional
 
 import numpy as np
 import tomli
 import torch
+from ray import tune
+from ray.air.integrations.wandb import setup_wandb
+from wandb.sdk.wandb_run import Run
 
 import wandb
 
@@ -53,6 +58,10 @@ from environments.parallel_envs import make_vec_envs
 from learner import Learner
 from metalearner import MetaLearner
 
+with open("pyproject.toml", "rb") as f:
+    PYPROJECT = tomli.load(f)
+PROJECT_NAME = PYPROJECT["tool"]["poetry"]["name"]
+
 
 def get_tags(max_rollouts_per_task: Optional[int]):
     tags = ["multi-replay-buffers"]
@@ -61,7 +70,7 @@ def get_tags(max_rollouts_per_task: Optional[int]):
     return tags
 
 
-def main():
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-type", default="gridworld_varibad")
     parser.add_argument("--debug", action="store_true")
@@ -161,6 +170,16 @@ def main():
     else:
         raise Exception("Invalid Environment")
 
+    args.use_replay_buffer = use_replay_buffer
+    args.debug = debug
+    return args
+
+
+def main():
+    return train(parse_args())
+
+
+def train(args, run: Optional[Run] = None):
     # warning for deterministic execution
     if args.deterministic_execution:
         print("Envoking deterministic code execution.")
@@ -203,16 +222,15 @@ def main():
     # begin training (loop through all passed seeds)
     seed_list = [args.seed] if isinstance(args.seed, int) else args.seed
 
-    if not debug:
-        with open("pyproject.toml", "rb") as f:
-            pyproject = tomli.load(f)
-        project = pyproject["tool"]["poetry"]["name"]
+    if not args.debug:
         wandb.init(
-            project=project,
+            project=PROJECT_NAME,
             name=f"{args.env_name}-{args.exp_label}",
             sync_tensorboard=True,
             tags=get_tags(args.max_rollouts_per_task),
         )
+        run = wandb.run
+
     for seed in seed_list:
         print("training", seed)
         args.seed = seed
@@ -221,11 +239,42 @@ def main():
         if args.disable_metalearner:
             # If `disable_metalearner` is true, the file `learner.py` will be used instead of `metalearner.py`.
             # This is a stripped down version without encoder, decoder, stochastic latent variables, etc.
-            learner = Learner(args, use_replay_buffer=use_replay_buffer, debug=debug)
+            learner = Learner(
+                args,
+                use_replay_buffer=args.use_replay_buffer,
+                debug=args.debug,
+                run=run,
+            )
         else:
             learner = MetaLearner(args)
         learner.train()
     wandb.finish()
+
+
+def sweep(**config):
+    args = parse_args()
+    timestamp = datetime.datetime.now().strftime("-%d-%m-%H:%M:%S")
+    group = f"{args.env_name}-{timestamp}"
+
+    def train_func(sweep_params):
+        for k, v in sweep_params.items():
+            setattr(args, k, v)
+        run = setup_wandb(
+            config=vars(args),
+            group=group,
+            project=PROJECT_NAME,
+            rank_zero_only=False,
+            tags=get_tags(args.max_rollouts_per_task),
+        )
+        print(
+            f"wandb: ️👪 View group at {run.get_project_url()}/groups/{urllib.parse.quote(group)}/workspace"
+        )
+        return train(args, run=run)
+
+    tune.Tuner(
+        trainable=tune.with_resources(train_func, dict(gpu=1)),
+        param_space=config,
+    ).fit()
 
 
 if __name__ == "__main__":
