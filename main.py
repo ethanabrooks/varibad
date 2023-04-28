@@ -75,10 +75,12 @@ def parse_args():
     parser.add_argument("--env-type", default="gridworld_varibad")
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--replay_buffer", action="store_true")
+    parser.add_argument("--notes")
     args, rest_args = parser.parse_known_args()
     use_replay_buffer = args.replay_buffer
     debug = args.debug
     env = args.env_type
+    notes = args.notes
 
     # --- GridWorld ---
 
@@ -172,6 +174,7 @@ def parse_args():
 
     args.use_replay_buffer = use_replay_buffer
     args.debug = debug
+    args.notes = notes
     return args
 
 
@@ -228,6 +231,7 @@ def train(args, run: Optional[Run] = None):
             name=f"{args.env_name}-{args.exp_label}",
             sync_tensorboard=True,
             tags=get_tags(args.max_rollouts_per_task),
+            notes=args.notes,
         )
         run = wandb.run
 
@@ -265,6 +269,7 @@ def sweep(**config):
             project=PROJECT_NAME,
             rank_zero_only=False,
             tags=get_tags(args.max_rollouts_per_task),
+            notes=args.notes,
         )
         print(
             f"wandb: ️👪 View group at {run.get_project_url()}/groups/{urllib.parse.quote(group)}/workspace"
