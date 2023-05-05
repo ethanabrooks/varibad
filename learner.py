@@ -35,6 +35,7 @@ class Learner:
     """
 
     def __init__(self, args, use_replay_buffer: bool, debug: bool, run: Optional[Run]):
+        print("Seed:", args.seed)
         self.args = args
         self.run = run
 
