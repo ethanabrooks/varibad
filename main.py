@@ -76,11 +76,13 @@ def parse_args():
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--replay_buffer", action="store_true")
     parser.add_argument("--notes")
+    parser.add_argument("--artifact")
     args, rest_args = parser.parse_known_args()
     use_replay_buffer = args.replay_buffer
     debug = args.debug
     env = args.env_type
     notes = args.notes
+    artifact = args.artifact
 
     # --- GridWorld ---
 
@@ -175,6 +177,7 @@ def parse_args():
     args.use_replay_buffer = use_replay_buffer
     args.debug = debug
     args.notes = notes
+    args.artifact = artifact
     return args
 
 

@@ -449,7 +449,9 @@ class Learner:
                             type="dataset",
                         )
                         artifact.add_dir(replay_buffer_save_path)
-                        self.run.log_artifact(artifact)
+                        self.run.log_artifact(
+                            artifact, aliases=[f"{self.args.artifact}.{self.args.seed}"]
+                        )
 
                 # save normalisation params of envs
                 if self.args.norm_rew_for_policy:
