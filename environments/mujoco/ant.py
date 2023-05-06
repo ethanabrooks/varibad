@@ -89,6 +89,8 @@ class AntEnv(MujocoEnv):
     ):
 
         num_episodes = args.max_rollouts_per_task
+        if num_episodes is None:
+            num_episodes = 1
         unwrapped_env = env.venv.unwrapped.envs[0].unwrapped
 
         # --- initialise things we want to keep track of ---
@@ -125,7 +127,7 @@ class AntEnv(MujocoEnv):
             hidden_state = None
 
         # keep track of what task we're in and the position of the cheetah
-        pos = [[] for _ in range(args.max_rollouts_per_task)]
+        pos = [[] for _ in range(num_episodes)]
         start_pos = unwrapped_env.get_body_com("torso")[:2].copy()
 
         for episode_idx in range(num_episodes):
