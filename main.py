@@ -4,6 +4,7 @@ Takes a flag --env-type (see below for choices) and loads the parameters from th
 """
 import argparse
 import datetime
+import time
 import urllib
 import warnings
 from typing import Optional
@@ -266,14 +267,21 @@ def sweep(**config):
     def train_func(sweep_params):
         for k, v in sweep_params.items():
             setattr(args, k, v)
-        run = setup_wandb(
-            config=vars(args),
-            group=group,
-            project=PROJECT_NAME,
-            rank_zero_only=False,
-            tags=get_tags(args.max_rollouts_per_task),
-            notes=args.notes,
-        )
+        sleep_time = 1
+        while True:
+            try:
+                run = setup_wandb(
+                    config=vars(args),
+                    group=group,
+                    project=PROJECT_NAME,
+                    rank_zero_only=False,
+                    tags=get_tags(args.max_rollouts_per_task),
+                    notes=args.notes,
+                )
+                break
+            except wandb.errors.CommError:
+                time.sleep(sleep_time)
+                sleep_time *= 2
         print(
             f"wandb: ️👪 View group at {run.get_project_url()}/groups/{urllib.parse.quote(group)}/workspace"
         )
