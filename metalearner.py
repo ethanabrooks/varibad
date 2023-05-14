@@ -9,12 +9,14 @@ import wandb
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
 from algorithms.ppo import PPO
-from environments.parallel_envs import make_vec_envs
+from environments.parallel_envs import make_env, make_vec_envs
 from models.policy import Policy
 from utils import evaluation as utl_eval
 from utils import helpers as utl
 from utils.tb_logger import TBLogger
 from vae import VaribadVAE
+import itertools
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -25,7 +27,6 @@ class MetaLearner:
     """
 
     def __init__(self, args):
-
         self.args = args
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
@@ -39,6 +40,30 @@ class MetaLearner:
         # initialise tensorboard logger
         self.logger = TBLogger(self.args, self.args.exp_label)
 
+        def generate_tasks(train: bool):
+            env_thunk = make_env(
+                args.env_name,
+                seed=args.seed,
+                rank=0,
+                episodes_per_task=args.max_rollouts_per_task,
+                tasks=None,
+                add_done_info=None,
+            )
+            env = env_thunk()
+            while True:
+                task = env.sample_task()
+                is_test = env.test_task_mask(task[None]).item()
+                if (train and not is_test) or (not train and is_test):
+                    yield task
+
+        tasks = (
+            None
+            if args.num_train_tasks is None
+            else np.stack(
+                list(itertools.islice(generate_tasks(train=True), args.num_train_tasks))
+            )
+        )
+
         # initialise environments
         self.envs = make_vec_envs(
             env_name=args.env_name,
@@ -49,16 +74,16 @@ class MetaLearner:
             episodes_per_task=self.args.max_rollouts_per_task,
             normalise_rew=args.norm_rew_for_policy,
             ret_rms=None,
-            tasks=None,
+            tasks=tasks,
         )
 
         if self.args.single_task_mode:
             # get the current tasks (which will be num_process many different tasks)
-            self.train_tasks = self.envs.get_task()
+            self.test_tasks = self.envs.get_task()
             # set the tasks to the first task (i.e. just a random task)
-            self.train_tasks[1:] = self.train_tasks[0]
+            self.test_tasks[1:] = self.test_tasks[0]
             # make it a list
-            self.train_tasks = [t for t in self.train_tasks]
+            self.test_tasks = [t for t in self.test_tasks]
             # re-initialise environments with those tasks
             self.envs = make_vec_envs(
                 env_name=args.env_name,
@@ -69,14 +94,22 @@ class MetaLearner:
                 episodes_per_task=self.args.max_rollouts_per_task,
                 normalise_rew=args.norm_rew_for_policy,
                 ret_rms=None,
-                tasks=self.train_tasks,
+                tasks=self.test_tasks,
             )
             # save the training tasks so we can evaluate on the same envs later
-            utl.save_obj(
-                self.train_tasks, self.logger.full_output_folder, "train_tasks"
-            )
+            utl.save_obj(self.test_tasks, self.logger.full_output_folder, "test_tasks")
         else:
-            self.train_tasks = None
+            self.test_tasks = (
+                None
+                if args.num_test_tasks is None
+                else np.stack(
+                    list(
+                        itertools.islice(
+                            generate_tasks(train=False), args.num_test_tasks
+                        )
+                    )
+                )
+            )
 
         # calculate what the maximum length of the trajectories is
         self.args.max_trajectory_len = self.envs._max_episode_steps
@@ -114,7 +147,6 @@ class MetaLearner:
         )
 
     def initialise_policy(self):
-
         # initialise policy network
         policy_net = Policy(
             args=self.args,
@@ -188,7 +220,6 @@ class MetaLearner:
             self.log(None, None, start_time)
 
         for self.iter_idx in range(self.num_updates):
-
             # First, re-compute the hidden states given the current rollouts (since the VAE might've changed)
             with torch.no_grad():
                 (
@@ -209,7 +240,6 @@ class MetaLearner:
 
             # rollout policies for a few steps
             for step in range(self.args.policy_num_steps):
-
                 # sample actions from policy
                 with torch.no_grad():
                     value, action = utl.select_action(
@@ -317,7 +347,6 @@ class MetaLearner:
             # --- UPDATE ---
 
             if self.args.precollect_len <= self.frames:
-
                 # check if we are pre-training the VAE
                 if self.args.pretrain_len > self.iter_idx:
                     for p in range(self.args.num_vae_updates_per_pretrain):
@@ -329,7 +358,6 @@ class MetaLearner:
                         )
                 # otherwise do the normal update (policy + vae)
                 else:
-
                     train_stats = self.update(
                         state=prev_state,
                         belief=belief,
@@ -414,7 +442,6 @@ class MetaLearner:
         """
         # update policy (if we are not pre-training, have enough data in the vae buffer, and are not at iteration 0)
         if self.iter_idx >= self.args.pretrain_len and self.iter_idx > 0:
-
             # bootstrap next value prediction
             with torch.no_grad():
                 next_value = self.get_value(
@@ -452,7 +479,6 @@ class MetaLearner:
         return policy_train_stats
 
     def log(self, run_stats, train_stats, start_time):
-
         # --- visualise behaviour of policy ---
 
         if (self.iter_idx + 1) % self.args.vis_interval == 0:
@@ -471,14 +497,13 @@ class MetaLearner:
                 compute_state_reconstruction_loss=self.vae.compute_state_reconstruction_loss,
                 compute_task_reconstruction_loss=self.vae.compute_task_reconstruction_loss,
                 compute_kl_loss=self.vae.compute_kl_loss,
-                tasks=self.train_tasks,
+                tasks=self.test_tasks,
             )
             self.logger.save_pngs(self.iter_idx)
 
         # --- evaluate policy ----
 
         if (self.iter_idx + 1) % self.args.eval_interval == 0:
-
             ret_rms = self.envs.venv.ret_rms if self.args.norm_rew_for_policy else None
             returns_per_episode = utl_eval.evaluate(
                 args=self.args,
@@ -486,7 +511,7 @@ class MetaLearner:
                 ret_rms=ret_rms,
                 encoder=self.vae.encoder,
                 iter_idx=self.iter_idx,
-                tasks=self.train_tasks,
+                tasks=self.test_tasks,
             )
 
             # log the return avg/std across tasks (=processes)
@@ -533,7 +558,6 @@ class MetaLearner:
                 idx_labels.append(int(self.iter_idx))
 
             for idx_label in idx_labels:
-
                 torch.save(
                     self.policy.actor_critic,
                     os.path.join(save_path, f"policy{idx_label}.pt"),
@@ -573,7 +597,6 @@ class MetaLearner:
         if ((self.iter_idx + 1) % self.args.log_interval == 0) and (
             train_stats is not None
         ):
-
             self.logger.add(
                 "environment/state_max",
                 self.policy_storage.prev_state.max(),
