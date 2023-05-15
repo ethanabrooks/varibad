@@ -59,7 +59,7 @@
       };
     in {
       devShell = pkgs.mkShell {
-        LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.linuxPackages.nvidia_x11}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib";
+        LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.cudaPackages.cudnn}/lib:${pkgs.linuxPackages.nvidia_x11}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib";
         buildInputs = with pkgs; [
           alejandra
           poetry
