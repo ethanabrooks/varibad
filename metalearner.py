@@ -4,6 +4,7 @@ import time
 import gym
 import numpy as np
 import torch
+import wandb
 
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
@@ -560,6 +561,8 @@ class MetaLearner:
                 if self.args.norm_rew_for_policy:
                     rew_rms = self.envs.venv.ret_rms
                     utl.save_obj(rew_rms, save_path, f"env_rew_rms{idx_label}")
+            if wandb.run is not None:
+                wandb.save(os.path.join(save_path, "*.pt"))
                 # TODO: grab from policy and save?
                 # if self.args.norm_obs_for_policy:
                 #     obs_rms = self.envs.venv.obs_rms
