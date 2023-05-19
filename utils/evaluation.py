@@ -57,10 +57,8 @@ def evaluate(args, policy, ret_rms, iter_idx, tasks, encoder=None, num_episodes=
     else:
         latent_sample = latent_mean = latent_logvar = hidden_state = None
 
-    for episode_idx in range(num_episodes):
-
-        for step_idx in range(num_steps):
-
+    for _ in range(num_episodes):
+        for _ in range(num_steps):
             with torch.no_grad():
                 _, action = utl.select_action(
                     args=args,
@@ -212,6 +210,8 @@ def visualise_behaviour(
 
 def get_test_rollout(args, env, policy, encoder=None):
     num_episodes = args.max_rollouts_per_task
+    if num_episodes is None:
+        num_episodes = 1
 
     # --- initialise things we want to keep track of ---
 
@@ -240,7 +240,6 @@ def get_test_rollout(args, env, policy, encoder=None):
     task = task.view(-1) if task is not None else None
 
     for episode_idx in range(num_episodes):
-
         curr_rollout_rew = []
 
         if encoder is not None:
@@ -260,7 +259,6 @@ def get_test_rollout(args, env, policy, encoder=None):
             episode_latent_logvars[episode_idx].append(curr_latent_logvar[0].clone())
 
         for step_idx in range(1, env._max_episode_steps + 1):
-
             episode_prev_obs[episode_idx].append(state.clone())
 
             latent = utl.get_latent_for_policy(
@@ -451,7 +449,6 @@ def plot_vae_loss(
 
     # compute the sum of ELBO_t's by looping through (trajectory length + prior)
     for i in range(len(latent_means)):
-
         curr_latent_mean = latent_means[i]
         curr_latent_logvar = latent_logvars[i]
 
@@ -544,7 +541,6 @@ def plot_vae_loss(
     # --- plot rew reconstruction ---
 
     if reward_decoder is not None:
-
         rew_reconstr_mean = torch.stack(rew_reconstr_mean).detach().cpu().numpy()
         rew_reconstr_std = torch.stack(rew_reconstr_std).detach().cpu().numpy()
         rew_pred_std = torch.stack(rew_pred_std).detach().cpu().numpy()
@@ -594,7 +590,6 @@ def plot_vae_loss(
     # --- plot state reconstruction ---
 
     if state_decoder is not None:
-
         plt.figure(figsize=(12, 5))
 
         state_reconstr_mean = torch.stack(state_reconstr_mean).detach().cpu().numpy()
@@ -648,7 +643,6 @@ def plot_vae_loss(
     # --- plot task reconstruction ---
 
     if task_decoder is not None:
-
         plt.figure(figsize=(12, 5))
 
         task_reconstr_mean = torch.stack(task_reconstr_mean).detach().cpu().numpy()
