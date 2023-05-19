@@ -249,7 +249,7 @@ class Policy(nn.Module):
             ).to(device)
 
         # concatenate inputs
-        inputs = torch.cat((state, latent, belief, task), dim=-1)
+        inputs = torch.cat((state.squeeze(0), latent, belief, task), dim=-1)
 
         # forward through critic/actor part
         hidden_critic = self.forward_critic(inputs)
