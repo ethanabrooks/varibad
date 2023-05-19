@@ -5,7 +5,8 @@ import os
 import numpy as np
 import six
 
-from environments.mujoco.rand_param_envs.gym import Wrapper, error, version
+from environments.mujoco.rand_param_envs.gym.core import Wrapper, error
+from environments.mujoco.rand_param_envs.gym.version import VERSION
 from environments.mujoco.rand_param_envs.gym.monitoring import (
     stats_recorder,
     video_recorder,
@@ -296,7 +297,7 @@ class Monitor(Wrapper):
 
     def _env_info(self):
         env_info = {
-            "gym_version": version.VERSION,
+            "gym_version": VERSION,
         }
         if self.env.spec:
             env_info["env_id"] = self.env.spec.id
