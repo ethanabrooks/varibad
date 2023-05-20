@@ -4,10 +4,25 @@ import os
 from glob import glob
 
 import imageio
+import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        try:
+            return super().default(obj)
+        except TypeError:
+            return str(obj)
 
 
 class TBLogger:
@@ -67,7 +82,7 @@ class TBLogger:
             except:
                 config = args
             config.update(device=device.type)
-            json.dump(config, f, indent=2)
+            json.dump(config, f, indent=2, cls=NumpyEncoder)
 
     def add(self, name, value, x_pos):
         self.writer.add_scalar(name, value, x_pos)
