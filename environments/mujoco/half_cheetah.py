@@ -51,6 +51,7 @@ class HalfCheetahEnv(HalfCheetahEnv_):
         return_pos=False,
         **kwargs,
     ):
+
         num_episodes = args.max_rollouts_per_task
         if num_episodes is None:
             num_episodes = 1
@@ -93,6 +94,7 @@ class HalfCheetahEnv(HalfCheetahEnv_):
         start_pos = unwrapped_env.get_body_com("torso")[0].copy()
 
         for episode_idx in range(num_episodes):
+
             curr_rollout_rew = []
             pos[episode_idx].append(start_pos)
 
@@ -217,7 +219,7 @@ class HalfCheetahEnv(HalfCheetahEnv_):
             plt.plot([0, 0], [200, 200], "b--", alpha=0.2)
         plt.tight_layout()
         if image_folder is not None:
-            plt.savefig("{}/behaviour".format(image_folder))
+            plt.savefig("{}/{}_behaviour".format(image_folder, iter_idx))
             plt.close()
         else:
             plt.show()
