@@ -44,6 +44,12 @@
           ]);
       };
       overrides = pyfinal: pyprev: rec {
+        dm-alchemy = pyprev.dm-alchemy.overridePythonAttrs (old: {
+          buildInputs = old.buildInputs ++ (with pyfinal; [setuptools grpcio-tools]);
+        });
+        grpcio-tools = pyprev.grpcio-tools.overridePythonAttrs (old: {
+          buildInputs = [pyfinal.grpcio pkgs.gcc-unwrapped];
+        });
         mujoco-py =
           (pyprev.mujoco-py.override {
             preferWheel = false;
