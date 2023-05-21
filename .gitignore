@@ -10,3 +10,4 @@ docker/
 .direnv/
 .env
 wandb/
+scratch/
