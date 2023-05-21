@@ -200,7 +200,6 @@ class Policy(nn.Module):
         return h
 
     def forward(self, state, latent, belief, task):
-
         # handle inputs (normalise + embed)
 
         if self.pass_state_to_policy:
@@ -296,7 +295,6 @@ class Policy(nn.Module):
             self.task_rms.update(policy_storage.tasks[:-1])
 
     def evaluate_actions(self, state, latent, belief, task, action):
-
         value, actor_features = self.forward(state, latent, belief, task)
         dist = self.dist(actor_features)
 
@@ -379,7 +377,6 @@ class DiagGaussian(nn.Module):
         self.min_std = torch.tensor([1e-6]).to(device)
 
     def forward(self, x):
-
         action_mean = self.fc_mean(x)
         if self.norm_actions_pre_sampling:
             action_mean = torch.tanh(action_mean)

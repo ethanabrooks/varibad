@@ -71,7 +71,6 @@ class PPO:
         rlloss_through_encoder=False,  # whether or not to backprop RL loss through encoder
         compute_vae_loss=None,  # function that can compute the VAE loss
     ):
-
         # -- get action values --
         advantages = policy_storage.returns[:-1] - policy_storage.value_preds[:-1]
         advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-5)
@@ -102,12 +101,10 @@ class PPO:
         dist_entropy_epoch = 0
         loss_epoch = 0
         for e in range(self.ppo_epoch):
-
             data_generator = policy_storage.feed_forward_generator(
                 advantages, self.num_mini_batch
             )
             for sample in data_generator:
-
                 (
                     state_batch,
                     belief_batch,

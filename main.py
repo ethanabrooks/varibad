@@ -17,6 +17,7 @@ from ray.air.integrations.wandb import setup_wandb
 from wandb.sdk.wandb_run import Run
 
 import wandb
+from config.alchemy import args_alchemy_multitask, args_alchemy_rl2
 
 # get configs
 from config.gridworld import args_grid_belief_oracle, args_grid_rl2, args_grid_varibad
@@ -94,6 +95,13 @@ def parse_args():
         args = args_grid_varibad.get_args(rest_args)
     elif env == "gridworld_rl2":
         args = args_grid_rl2.get_args(rest_args)
+
+    # --- Alchemy ---
+
+    if env == "alchemy_multitask":
+        args = args_alchemy_multitask.get_args(rest_args)
+    elif env == "alchemy_rl2":
+        args = args_alchemy_rl2.get_args(rest_args)
 
     # --- PointRobot 2D Navigation ---
 
