@@ -12,11 +12,21 @@ class AlchemyEnv(gym.Env):
     def __init__(
         self,
         seed: int,
-        level_name: str = "alchemy/perceptual_mapping_randomized_with_rotation_and_random_bottleneck",
+        num_stones_per_trial: int,
+        num_potions_per_trial: int,
+        end_trial_action: bool,
+        max_steps_per_trial: int,
+        level_name: str = "alchemy/",
+        **_
     ):
         self.env = symbolic_alchemy.get_symbolic_alchemy_level(
             level_name,
             seed=seed,
+            num_trials=1,
+            num_stones_per_trial=num_stones_per_trial,
+            num_potions_per_trial=num_potions_per_trial,
+            end_trial_action=end_trial_action,
+            max_steps_per_trial=max_steps_per_trial,
             see_chemistries={
                 "input_chem": utils.ChemistrySeen(
                     content=utils.ElementContent.GROUND_TRUTH
@@ -55,7 +65,7 @@ class AlchemyEnv(gym.Env):
         info["done_mdp"] = done_mdp
         if self.env.is_new_trial():
             info["start_state"] = state
-        assert np.array_equal(timestep.observation['input_chem'], self.get_task())
+        assert np.array_equal(timestep.observation["input_chem"], self.get_task())
         return state, timestep.reward, timestep.last(), info
 
     def observation_from_timestep(self, timestep: TimeStep) -> np.ndarray:

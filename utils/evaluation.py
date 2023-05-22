@@ -28,6 +28,21 @@ def evaluate(args, policy, ret_rms, iter_idx, tasks, encoder=None, num_episodes=
 
     # --- initialise environments and latents ---
 
+    kwargs = {
+        k: v
+        for k, v in vars(args).items()
+        if k
+        not in [
+            "env_name",
+            "seed",
+            "num_processes",
+            "gamma",
+            "device",
+            "episodes_per_task",
+            "normalise_rew",
+            "ret_rms",
+        ]
+    }
     envs = make_vec_envs(
         env_name,
         seed=args.seed * 42 + iter_idx,
@@ -40,6 +55,7 @@ def evaluate(args, policy, ret_rms, iter_idx, tasks, encoder=None, num_episodes=
         ret_rms=ret_rms,
         tasks=tasks,
         add_done_info=num_episodes > 1,
+        **kwargs
     )
     num_steps = envs._max_episode_steps
 
@@ -134,7 +150,7 @@ def visualise_behaviour(
 ):
     # initialise environment
     env = make_vec_envs(
-        env_name=args.env_name,
+        # env_name=args.env_name,
         seed=args.seed * 42 + iter_idx,
         num_processes=1,
         gamma=args.policy_gamma,
@@ -145,6 +161,7 @@ def visualise_behaviour(
         rank_offset=args.num_processes
         + 42,  # not sure if the temp folders would otherwise clash
         tasks=tasks,
+        **vars(args)
     )
     episode_task = torch.from_numpy(np.array(env.get_task())).to(device).float()
 

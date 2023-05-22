@@ -221,6 +221,7 @@ def train(args, run: Optional[Run] = None):
             normalise_rew=args.norm_rew_for_policy,
             ret_rms=None,
             tasks=None,
+            **vars(args),
         )
         assert np.unique(envs.action_space.low) == [-1]
         assert np.unique(envs.action_space.high) == [1]
@@ -298,7 +299,7 @@ def sweep(**config):
         return train(args, run=run)
 
     tune.Tuner(
-        trainable=tune.with_resources(train_func, dict(gpu=1)),
+        trainable=tune.with_resources(train_func, dict(gpu=1 / 9)),
         param_space=config,
     ).fit()
 

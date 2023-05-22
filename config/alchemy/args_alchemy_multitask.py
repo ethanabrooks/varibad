@@ -6,6 +6,11 @@ from utils.helpers import boolean_argument, positive_int
 def get_args(rest_args):
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--num_stones_per_trial", type=int, default=1)
+    parser.add_argument("--num_potions_per_trial", type=int, default=2)
+    parser.add_argument("--end_trial_action", type=boolean_argument, default=True)
+    parser.add_argument("--max_steps_per_trial", type=int, default=20)
+
     # --- GENERAL ---
 
     # training parameters

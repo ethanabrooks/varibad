@@ -62,6 +62,21 @@ class Learner:
 
         # initialise environments
         print("Making environments...", end=" ")
+        kwargs = {
+            k: v
+            for k, v in vars(args).items()
+            if k
+            not in [
+                "env_name",
+                "seed",
+                "num_processes",
+                "gamma",
+                "device",
+                "episodes_per_task",
+                "normalise_rew",
+                "ret_rms",
+            ]
+        }
         self.envs = make_vec_envs(
             env_name=args.env_name,
             seed=args.seed,
@@ -72,6 +87,7 @@ class Learner:
             normalise_rew=args.norm_rew_for_policy,
             ret_rms=None,
             tasks=None,
+            **kwargs,
         )
         print("✓")
 
@@ -93,6 +109,7 @@ class Learner:
                 normalise_rew=args.norm_rew_for_policy,
                 ret_rms=None,
                 tasks=self.train_tasks,
+                **kwargs,
             )
             # save the training tasks so we can evaluate on the same envs later
             utl.save_obj(
@@ -357,14 +374,14 @@ class Learner:
 
         if (self.iter_idx + 1) % self.args.vis_interval == 0:
             ret_rms = self.envs.venv.ret_rms if self.args.norm_rew_for_policy else None
-            utl_eval.visualise_behaviour(
-                args=self.args,
-                policy=self.policy,
-                image_folder=self.logger.full_output_folder,
-                iter_idx=self.iter_idx,
-                ret_rms=ret_rms,
-                tasks=self.train_tasks,
-            )
+            # utl_eval.visualise_behaviour(
+            #     args=self.args,
+            #     policy=self.policy,
+            #     image_folder=self.logger.full_output_folder,
+            #     iter_idx=self.iter_idx,
+            #     ret_rms=ret_rms,
+            #     tasks=self.train_tasks,
+            # )
             self.logger.save_pngs(self.iter_idx)
 
         # --- evaluate policy ----
