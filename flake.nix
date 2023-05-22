@@ -90,6 +90,8 @@
     in {
       devShell = pkgs.mkShell {
         MUJOCO_PY_MUJOCO_PATH = "${mujoco}";
+        MUJOCO_PY_FORCE_CPU = 1;
+        PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION = "python";
         LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.cudaPackages.cudnn}/lib:${pkgs.linuxPackages.nvidia_x11}/lib:${pkgs.mesa.osmesa}/lib:${pkgs.libGL}/lib:${pkgs.gcc-unwrapped.lib}/lib:${mujoco}/bin";
         buildInputs = with pkgs; [
           alejandra
