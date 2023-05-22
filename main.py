@@ -7,6 +7,7 @@ import datetime
 import time
 import urllib
 import warnings
+from git import Repo
 from typing import Optional
 
 import numpy as np
@@ -188,6 +189,7 @@ def parse_args():
     args.debug = debug
     args.notes = notes
     args.artifact = artifact
+    args.commit = Repo(".").head.commit.hexsha
     return args
 
 
