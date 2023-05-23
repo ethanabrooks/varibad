@@ -22,10 +22,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--loadpath")
     parser.add_argument("--num_episodes", type=int)
+    parser.add_argument("--test", action="store_true")
     args, rest_args = parser.parse_known_args()
     loadpath = args.loadpath
     num_episodes = args.num_episodes
+    test = args.test
     args = parse_args(rest_args)
+    args.test = test
 
     if not args.debug:
         wandb.init(

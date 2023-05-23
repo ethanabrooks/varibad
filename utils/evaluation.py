@@ -17,6 +17,7 @@ def evaluate(
     seed,
     tasks,
     logger: Optional[TBLogger] = None,
+    test: bool = True,
     encoder=None,
     num_episodes=None,
 ):
@@ -51,6 +52,7 @@ def evaluate(
         ret_rms=ret_rms,
         tasks=tasks,
         add_done_info=num_episodes > 1,
+        test=test,
     )
     num_steps = envs._max_episode_steps
 
