@@ -5,7 +5,8 @@ from environments.mujoco.rand_param_envs.gym.envs.mujoco import mujoco_env
 
 
 class HopperEnv(mujoco_env.MujocoEnv, utils.EzPickle):
-    def __init__(self):
+    def __init__(self, test: bool = False):
+        self.test = test
         mujoco_env.MujocoEnv.__init__(self, "hopper.xml", 4)
         utils.EzPickle.__init__(self)
 
