@@ -505,6 +505,7 @@ class MetaLearner:
 
         if (self.iter_idx + 1) % self.args.eval_interval == 0:
             ret_rms = self.envs.venv.ret_rms if self.args.norm_rew_for_policy else None
+            last_log = self.iter_idx + 1 + self.args.eval_interval > self.num_updates
             returns_per_episode = utl_eval.evaluate(
                 args=self.args,
                 policy=self.policy,
@@ -512,6 +513,7 @@ class MetaLearner:
                 encoder=self.vae.encoder,
                 iter_idx=self.iter_idx,
                 tasks=self.test_tasks,
+                logger=self.logger if last_log else None,
             )
 
             # log the return avg/std across tasks (=processes)

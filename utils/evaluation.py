@@ -1,14 +1,25 @@
+from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
 from environments.parallel_envs import make_vec_envs
 from utils import helpers as utl
+from utils.tb_logger import TBLogger
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def evaluate(args, policy, ret_rms, iter_idx, tasks, encoder=None, num_episodes=None):
+def evaluate(
+    args,
+    policy,
+    ret_rms,
+    iter_idx,
+    tasks,
+    logger: Optional[TBLogger] = None,
+    encoder=None,
+    num_episodes=None,
+):
     env_name = args.env_name
     if hasattr(args, "test_env_name"):
         env_name = args.test_env_name
@@ -57,8 +68,11 @@ def evaluate(args, policy, ret_rms, iter_idx, tasks, encoder=None, num_episodes=
     else:
         latent_sample = latent_mean = latent_logvar = hidden_state = None
 
+    t = -1
     for _ in range(num_episodes):
+        episode_return = 0
         for _ in range(num_steps):
+            t += 1
             with torch.no_grad():
                 _, action = utl.select_action(
                     args=args,
@@ -79,6 +93,9 @@ def evaluate(args, policy, ret_rms, iter_idx, tasks, encoder=None, num_episodes=
                 done,
                 infos,
             ) = utl.env_step(envs, action, args)
+            if logger is not None:
+                logger.add("reward", rew_raw.mean(), t)
+            episode_return += rew_raw
             done_mdp = [info["done_mdp"] for info in infos]
 
             if encoder is not None:
@@ -110,6 +127,9 @@ def evaluate(args, policy, ret_rms, iter_idx, tasks, encoder=None, num_episodes=
                 state, belief, task = utl.reset_env(
                     envs, args, indices=done_indices, state=state
                 )
+        if logger is not None:
+            logger.add("episode_return", episode_return.mean(), t)
+        episode_return = 0
 
     envs.close()
 
