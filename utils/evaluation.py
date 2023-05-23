@@ -1,3 +1,5 @@
+from collections import defaultdict
+import numbers
 from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
@@ -97,6 +99,15 @@ def evaluate(
             ) = utl.env_step(envs, action, args)
             if logger is not None:
                 logger.add("reward", rew_raw.mean(), t)
+
+                scalar_infos = defaultdict(list)
+                for info in infos:
+                    for k, v in info.items():
+                        if isinstance(v, numbers.Number):
+                            scalar_infos[k].append(v)
+
+                for k, v in scalar_infos.items():
+                    logger.add(k, np.mean(v), t)
             episode_return += rew_raw
             done_mdp = [info["done_mdp"] for info in infos]
 
