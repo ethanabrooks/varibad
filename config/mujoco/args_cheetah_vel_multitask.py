@@ -16,7 +16,7 @@ def get_args(rest_args):
         "--exp_label", default="multitask", help="label for the experiment"
     )
     parser.add_argument(
-        "--env_name", default="HalfCheetahVel-v0", help="environment to train on"
+        "--env_name", default="HalfCheetahVel200-v0", help="environment to train on"
     )
 
     parser.add_argument(
