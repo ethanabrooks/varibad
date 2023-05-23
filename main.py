@@ -74,14 +74,14 @@ def get_tags(max_rollouts_per_task: Optional[int]):
     return tags
 
 
-def parse_args():
+def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-type", default="gridworld_varibad")
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--replay_buffer", action="store_true")
     parser.add_argument("--notes")
     parser.add_argument("--artifact")
-    args, rest_args = parser.parse_known_args()
+    args, rest_args = parser.parse_known_args(args)
     use_replay_buffer = args.replay_buffer
     debug = args.debug
     env = args.env_type

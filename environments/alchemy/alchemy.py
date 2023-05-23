@@ -55,7 +55,7 @@ class AlchemyEnv(gym.Env):
         info["done_mdp"] = done_mdp
         if self.env.is_new_trial():
             info["start_state"] = state
-        assert np.array_equal(timestep.observation['input_chem'], self.get_task())
+        assert np.array_equal(timestep.observation["input_chem"], self.get_task())
         return state, timestep.reward, timestep.last(), info
 
     def observation_from_timestep(self, timestep: TimeStep) -> np.ndarray:

@@ -376,7 +376,7 @@ class Learner:
                 args=self.args,
                 policy=self.policy,
                 ret_rms=ret_rms,
-                iter_idx=self.iter_idx,
+                seed=self.iter_idx,
                 tasks=self.train_tasks,
             )
 

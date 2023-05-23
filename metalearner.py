@@ -511,7 +511,7 @@ class MetaLearner:
                 policy=self.policy,
                 ret_rms=ret_rms,
                 encoder=self.vae.encoder,
-                iter_idx=self.iter_idx,
+                seed=self.iter_idx,
                 tasks=self.test_tasks,
                 logger=self.logger if last_log else None,
             )

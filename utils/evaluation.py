@@ -14,7 +14,7 @@ def evaluate(
     args,
     policy,
     ret_rms,
-    iter_idx,
+    seed,
     tasks,
     logger: Optional[TBLogger] = None,
     encoder=None,
@@ -41,7 +41,7 @@ def evaluate(
 
     envs = make_vec_envs(
         env_name,
-        seed=args.seed * 42 + iter_idx,
+        seed=args.seed * 42 + seed,
         num_processes=num_processes,
         gamma=args.policy_gamma,
         device=device,
