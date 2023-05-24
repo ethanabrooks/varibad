@@ -79,12 +79,7 @@ class AntDirEnv(AntEnv):
 
 class AntDir2DEnv(AntDirEnv):
     def sample_tasks(self, n_tasks):
-        # for fwd/bwd env, goal direc is backwards if - 1.0, forwards if + 1.0
-        directions = np.array(
-            [random.gauss(mu=0, sigma=1) for _ in range(n_tasks * 2)]
-        ).reshape((n_tasks, 2))
-        directions /= np.linalg.norm(directions, axis=1)[..., np.newaxis]
-        return directions
+        return np.random.random(n_tasks) * np.pi
 
 
 class AntDirOracleEnv(AntDirEnv):
