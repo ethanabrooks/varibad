@@ -1,16 +1,24 @@
+import datetime
 import os
 import pickle
 
 # import pickle5 as pickle
 import random
+import time
+import urllib
 import warnings
 from distutils.util import strtobool
+from typing import Callable, Optional
 
 import numpy as np
+import tomli
 import torch
 import torch.nn as nn
+from ray import tune
+from ray.air.integrations.wandb import setup_wandb
 from torch.nn import functional as F
 
+import wandb
 from environments.parallel_envs import make_vec_envs
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -399,3 +407,51 @@ def clip(value, low, high):
 
     clipped_value = torch.max(torch.min(value, high), low)
     return clipped_value
+
+
+def get_tags(max_rollouts_per_task: Optional[int]):
+    tags = ["multi-replay-buffers"]
+    if max_rollouts_per_task is None:
+        tags += ["single-task-histories"]
+    return tags
+
+
+def get_project_name():
+    with open("pyproject.toml", "rb") as f:
+        pyproject = tomli.load(f)
+    return pyproject["tool"]["poetry"]["name"]
+
+
+def sweep(args, config: dict, train_func):
+    timestamp = datetime.datetime.now().strftime("-%d-%m-%H:%M:%S")
+    group = f"{args.env_name}-{timestamp}"
+    args.project_name = get_project_name()
+
+    def trainable(sweep_params):
+        for k, v in sweep_params.items():
+            setattr(args, k, v)
+        sleep_time = 1
+        while True:
+            try:
+                run = setup_wandb(
+                    config=vars(args),
+                    group=group,
+                    project=args.project_name,
+                    rank_zero_only=False,
+                    tags=get_tags(args.max_rollouts_per_task),
+                    notes=args.notes,
+                    sync_tensorboard=True,
+                )
+                break
+            except wandb.errors.CommError:
+                time.sleep(sleep_time)
+                sleep_time *= 2
+        print(
+            f"wandb: ️👪 View group at {run.get_project_url()}/groups/{urllib.parse.quote(group)}/workspace"
+        )
+        return train_func(args)
+
+    tune.Tuner(
+        trainable=tune.with_resources(trainable, dict(gpu=1)),
+        param_space=config,
+    ).fit()

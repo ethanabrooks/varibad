@@ -1,16 +1,17 @@
 import argparse
-import torch
-import torch.nn as nn
+import wandb
 import os
 import pickle
-from main import parse_args
-from metalearner import MetaLearner
-from utils.evaluation import evaluate
-from utils.tb_logger import TBLogger
-import wandb
 from pathlib import Path
 
-from vae import VaribadVAE
+import torch
+import torch.nn as nn
+from wandb.sdk.wandb_run import Run
+
+import utils.helpers as utl
+from main import parse_args as base_parse_args
+from metalearner import MetaLearner
+from utils import evaluation
 
 
 def load_pickle(loadpath: Path):
@@ -18,7 +19,7 @@ def load_pickle(loadpath: Path):
         return pickle.load(f)
 
 
-def main():
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--loadpath")
     parser.add_argument("--num_episodes", type=int)
@@ -27,9 +28,18 @@ def main():
     loadpath = args.loadpath
     num_episodes = args.num_episodes
     test = args.test
-    args = parse_args(rest_args)
+    args = base_parse_args(rest_args)
     args.test = test
+    args.loadpath = loadpath
+    args.num_episodes = num_episodes
+    return args
 
+
+def main():
+    return evaluate(parse_args())
+
+
+def evaluate(args):
     if not args.debug:
         wandb.init(
             project="In-Context Model-Based Planning",
@@ -38,7 +48,10 @@ def main():
             notes=args.notes,
         )
 
-    for seed in args.seed:
+    seeds = args.seed
+    if not isinstance(seeds, list):
+        seeds = [seeds]
+    for seed in seeds:
         args.seed = seed
         metalearner = MetaLearner(args)
         logger = metalearner.logger
@@ -48,12 +61,12 @@ def main():
             ("policy", metalearner.policy, "actor_critic"),
         ]:
             name = f"{name}.pt"
-            wandb.restore(name, run_path=loadpath, root=logger.full_output_folder)
+            wandb.restore(name, run_path=args.loadpath, root=logger.full_output_folder)
             module = torch.load(os.path.join(logger.full_output_folder, name))
             assert isinstance(module, nn.Module)
             setattr(obj, attr, module)
 
-        evaluate(
+        evaluation.evaluate(
             args,
             metalearner.policy,
             ret_rms=None,
@@ -61,9 +74,14 @@ def main():
             tasks=None,
             logger=logger,
             encoder=metalearner.vae.encoder,
-            num_episodes=num_episodes,
+            num_episodes=args.num_episodes,
         )
-        print("=================== DONE =====================")
+    wandb.finish()
+    print("=================== DONE =====================")
+
+
+def sweep(**config):
+    return utl.sweep(args=parse_args(), config=config, train_func=evaluate)
 
 
 if __name__ == "__main__":
