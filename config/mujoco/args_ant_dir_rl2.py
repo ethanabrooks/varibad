@@ -21,7 +21,7 @@ def get_args(rest_args):
         "--exp_label", default="rl2", help="label (typically name of method)"
     )
     parser.add_argument(
-        "--env_name", default="AntDir2D200-v0", help="environment to train on"
+        "--env_name", default="AntDir2D-v0", help="environment to train on"
     )
     parser.add_argument("--num_train_tasks", type=int)
     parser.add_argument("--num_test_tasks", type=int)
