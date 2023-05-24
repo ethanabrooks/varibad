@@ -3,18 +3,12 @@ Main scripts to start experiments.
 Takes a flag --env-type (see below for choices) and loads the parameters from the respective config file.
 """
 import argparse
-import datetime
-import time
-import urllib
 import warnings
-from git import Repo
 from typing import Optional
 
 import numpy as np
-import tomli
 import torch
-from ray import tune
-from ray.air.integrations.wandb import setup_wandb
+from git import Repo
 from wandb.sdk.wandb_run import Run
 
 import wandb
@@ -60,18 +54,8 @@ from config.pointrobot import (
 from environments.parallel_envs import make_vec_envs
 from learner import Learner
 from metalearner import MetaLearner
-
-def get_project_name():
-    with open("pyproject.toml", "rb") as f:
-        pyproject = tomli.load(f)
-    return pyproject["tool"]["poetry"]["name"]
-
-
-def get_tags(max_rollouts_per_task: Optional[int]):
-    tags = ["multi-replay-buffers"]
-    if max_rollouts_per_task is None:
-        tags += ["single-task-histories"]
-    return tags
+from utils import helpers as utl
+from utils.helpers import get_project_name, get_tags
 
 
 def parse_args(args=None):
@@ -272,40 +256,9 @@ def train(args, run: Optional[Run] = None):
     wandb.finish()
 
 
+
 def sweep(**config):
-    args = parse_args()
-    timestamp = datetime.datetime.now().strftime("-%d-%m-%H:%M:%S")
-    group = f"{args.env_name}-{timestamp}"
-    args.project_name = get_project_name()
-
-    def train_func(sweep_params):
-        for k, v in sweep_params.items():
-            setattr(args, k, v)
-        sleep_time = 1
-        while True:
-            try:
-                run = setup_wandb(
-                    config=vars(args),
-                    group=group,
-                    project=args.project_name,
-                    rank_zero_only=False,
-                    tags=get_tags(args.max_rollouts_per_task),
-                    notes=args.notes,
-                )
-                break
-            except wandb.errors.CommError:
-                time.sleep(sleep_time)
-                sleep_time *= 2
-        print(
-            f"wandb: ️👪 View group at {run.get_project_url()}/groups/{urllib.parse.quote(group)}/workspace"
-        )
-        return train(args, run=run)
-
-    tune.Tuner(
-        trainable=tune.with_resources(train_func, dict(gpu=1)),
-        param_space=config,
-    ).fit()
-
+    return utl.sweep(args=parse_args(), config=config, train_func=train)
 
 if __name__ == "__main__":
     main()
