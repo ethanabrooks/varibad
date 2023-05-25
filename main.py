@@ -65,12 +65,14 @@ def parse_args(args=None):
     parser.add_argument("--replay_buffer", action="store_true")
     parser.add_argument("--notes")
     parser.add_argument("--artifact")
+    parser.add_argument("--gpus-per-proc", type=float, default=1)
     args, rest_args = parser.parse_known_args(args)
     use_replay_buffer = args.replay_buffer
     debug = args.debug
     env = args.env_type
     notes = args.notes
     artifact = args.artifact
+    gpus_per_proc = args.gpus_per_proc
 
     # --- GridWorld ---
 
@@ -173,6 +175,7 @@ def parse_args(args=None):
     args.debug = debug
     args.notes = notes
     args.artifact = artifact
+    args.gpus_per_proc = gpus_per_proc
     args.commit = Repo(".").head.commit.hexsha
     return args
 
@@ -256,9 +259,9 @@ def train(args, run: Optional[Run] = None):
     wandb.finish()
 
 
-
 def sweep(**config):
     return utl.sweep(args=parse_args(), config=config, train_func=train)
+
 
 if __name__ == "__main__":
     main()
