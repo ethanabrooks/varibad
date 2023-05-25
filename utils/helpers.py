@@ -452,6 +452,6 @@ def sweep(args, config: dict, train_func):
         return train_func(args)
 
     tune.Tuner(
-        trainable=tune.with_resources(trainable, dict(gpu=1)),
+        trainable=tune.with_resources(trainable, dict(gpu=args.gpus_per_proc)),
         param_space=config,
     ).fit()
