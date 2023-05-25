@@ -424,7 +424,7 @@ def get_project_name():
 
 def sweep(args, config: dict, train_func):
     timestamp = datetime.datetime.now().strftime("-%d-%m-%H:%M:%S")
-    group = f"{args.env_name}-{timestamp}"
+    group = f"{args.env_name}-{args.exp_label}-{timestamp}"
     args.project_name = get_project_name()
 
     def trainable(sweep_params):
