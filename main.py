@@ -12,45 +12,9 @@ from git import Repo
 from wandb.sdk.wandb_run import Run
 
 import wandb
-from config.alchemy import args_alchemy_multitask, args_alchemy_rl2
+from config import config
 
 # get configs
-from config.gridworld import args_grid_belief_oracle, args_grid_rl2, args_grid_varibad
-from config.mujoco import (
-    args_ant_dir_expert,
-    args_ant_dir_multitask,
-    args_ant_dir_rl2,
-    args_ant_dir_varibad,
-    args_ant_goal_expert,
-    args_ant_goal_humplik,
-    args_ant_goal_multitask,
-    args_ant_goal_rl2,
-    args_ant_goal_varibad,
-    args_cheetah_dir_expert,
-    args_cheetah_dir_multitask,
-    args_cheetah_dir_rl2,
-    args_cheetah_dir_varibad,
-    args_cheetah_vel_avg,
-    args_cheetah_vel_expert,
-    args_cheetah_vel_multitask,
-    args_cheetah_vel_rl2,
-    args_cheetah_vel_varibad,
-    args_humanoid_dir_expert,
-    args_humanoid_dir_multitask,
-    args_humanoid_dir_rl2,
-    args_humanoid_dir_varibad,
-    args_walker_avg,
-    args_walker_expert,
-    args_walker_multitask,
-    args_walker_rl2,
-    args_walker_varibad,
-)
-from config.pointrobot import (
-    args_pointrobot_humplik,
-    args_pointrobot_multitask,
-    args_pointrobot_rl2,
-    args_pointrobot_varibad,
-)
 from environments.parallel_envs import make_vec_envs
 from learner import Learner
 from metalearner import MetaLearner
@@ -66,118 +30,107 @@ def parse_args(args=None):
     parser.add_argument("--notes")
     parser.add_argument("--artifact")
     parser.add_argument("--gpus-per-proc", type=float, default=1)
-    args, rest_args = parser.parse_known_args(args)
-    use_replay_buffer = args.replay_buffer
-    debug = args.debug
+    args = parser.parse_args(args)
     env = args.env_type
-    notes = args.notes
-    artifact = args.artifact
-    gpus_per_proc = args.gpus_per_proc
 
     # --- GridWorld ---
 
-    if env == "gridworld_belief_oracle":
-        args = args_grid_belief_oracle.get_args(rest_args)
-    elif env == "gridworld_varibad":
-        args = args_grid_varibad.get_args(rest_args)
-    elif env == "gridworld_rl2":
-        args = args_grid_rl2.get_args(rest_args)
+    # if env == "gridworld_belief_oracle":
+    #     args = args_grid_belief_oracle.get_args(rest_args)
+    # elif env == "gridworld_varibad":
+    #     args = args_grid_varibad.get_args(rest_args)
+    # elif env == "gridworld_rl2":
+    #     args = args_grid_rl2.get_args(rest_args)
 
     # --- Alchemy ---
 
     if env == "alchemy_multitask":
-        args = args_alchemy_multitask.get_args(rest_args)
+        config_args = config.AlchemyMultitask
     elif env == "alchemy_rl2":
-        args = args_alchemy_rl2.get_args(rest_args)
-
-    # --- PointRobot 2D Navigation ---
-
-    elif env == "pointrobot_multitask":
-        args = args_pointrobot_multitask.get_args(rest_args)
-    elif env == "pointrobot_varibad":
-        args = args_pointrobot_varibad.get_args(rest_args)
-    elif env == "pointrobot_rl2":
-        args = args_pointrobot_rl2.get_args(rest_args)
-    elif env == "pointrobot_humplik":
-        args = args_pointrobot_humplik.get_args(rest_args)
+        config_args = config.AlchemyRL2
 
     # --- MUJOCO ---
+    #
+    # - AntDir -
+    elif env == "ant_dir_expert":
+        config_args = config.AntDirExpert
+    elif env == "ant_dir_multitask":
+        config_args = config.AntDirMultitask
+    # elif env == "ant_dir_varibad":
+    #     args = args_ant_dir_varibad.get_args(rest_args)
+    elif env == "ant_dir_rl2":
+        config_args = config.AntDirRL2
+    #
+    # - AntGoal -
+    elif env == "ant_goal_expert":
+        config_args = config.AntGoalExpert
+    elif env == "ant_goal_multitask":
+        config_args = config.AntGoalMultitask
+    # elif env == "ant_goal_varibad":
+    #     args = args_ant_goal_varibad.get_args(rest_args)
+    # elif env == "ant_goal_humplik":
+    #     args = args_ant_goal_humplik.get_args(rest_args)
+    elif env == "ant_goal_rl2":
+        config_args = config.AntGoalRL2
 
     # - CheetahDir -
     elif env == "cheetah_dir_multitask":
-        args = args_cheetah_dir_multitask.get_args(rest_args)
+        config_args = config.CheetahDirMultitask
     elif env == "cheetah_dir_expert":
-        args = args_cheetah_dir_expert.get_args(rest_args)
-    elif env == "cheetah_dir_varibad":
-        args = args_cheetah_dir_varibad.get_args(rest_args)
+        config_args = config.CheetahDirExpert
+    # elif env == "cheetah_dir_varibad":
+    #     args = args_cheetah_dir_varibad.get_args(rest_args)
     elif env == "cheetah_dir_rl2":
-        args = args_cheetah_dir_rl2.get_args(rest_args)
+        config_args = config.CheetahDirRL2
     #
     # - CheetahVel -
     elif env == "cheetah_vel_multitask":
-        args = args_cheetah_vel_multitask.get_args(rest_args)
+        config_args = config.CheetahVelMultitask
     elif env == "cheetah_vel_expert":
-        args = args_cheetah_vel_expert.get_args(rest_args)
-    elif env == "cheetah_vel_avg":
-        args = args_cheetah_vel_avg.get_args(rest_args)
-    elif env == "cheetah_vel_varibad":
-        args = args_cheetah_vel_varibad.get_args(rest_args)
+        config_args = config.CheetahVelExpert
+    # elif env == "cheetah_vel_avg":
+    #     args = args_cheetah_vel_avg.get_args(rest_args)
+    # elif env == "cheetah_vel_varibad":
+    #     args = args_cheetah_vel_varibad.get_args(rest_args)
     elif env == "cheetah_vel_rl2":
-        args = args_cheetah_vel_rl2.get_args(rest_args)
-    #
-    # - AntDir -
-    elif env == "ant_dir_multitask":
-        args = args_ant_dir_multitask.get_args(rest_args)
-    elif env == "ant_dir_expert":
-        args = args_ant_dir_expert.get_args(rest_args)
-    elif env == "ant_dir_varibad":
-        args = args_ant_dir_varibad.get_args(rest_args)
-    elif env == "ant_dir_rl2":
-        args = args_ant_dir_rl2.get_args(rest_args)
-    #
-    # - AntGoal -
-    elif env == "ant_goal_multitask":
-        args = args_ant_goal_multitask.get_args(rest_args)
-    elif env == "ant_goal_expert":
-        args = args_ant_goal_expert.get_args(rest_args)
-    elif env == "ant_goal_varibad":
-        args = args_ant_goal_varibad.get_args(rest_args)
-    elif env == "ant_goal_humplik":
-        args = args_ant_goal_humplik.get_args(rest_args)
-    elif env == "ant_goal_rl2":
-        args = args_ant_goal_rl2.get_args(rest_args)
+        config_args = config.CheetahVelRL2
     #
     # - Walker -
     elif env == "walker_multitask":
-        args = args_walker_multitask.get_args(rest_args)
+        config_args = config.WalkerMultitask
     elif env == "walker_expert":
-        args = args_walker_expert.get_args(rest_args)
-    elif env == "walker_avg":
-        args = args_walker_avg.get_args(rest_args)
-    elif env == "walker_varibad":
-        args = args_walker_varibad.get_args(rest_args)
+        config_args = config.WalkerExpert
+    # elif env == "walker_avg":
+    #     args = args_walker_avg.get_args(rest_args)
+    # elif env == "walker_varibad":
+    #     args = args_walker_varibad.get_args(rest_args)
     elif env == "walker_rl2":
-        args = args_walker_rl2.get_args(rest_args)
+        config_args = config.WalkerRL2
     #
     # - HumanoidDir -
-    elif env == "humanoid_dir_multitask":
-        args = args_humanoid_dir_multitask.get_args(rest_args)
-    elif env == "humanoid_dir_expert":
-        args = args_humanoid_dir_expert.get_args(rest_args)
-    elif env == "humanoid_dir_varibad":
-        args = args_humanoid_dir_varibad.get_args(rest_args)
-    elif env == "humanoid_dir_rl2":
-        args = args_humanoid_dir_rl2.get_args(rest_args)
-    else:
-        raise Exception("Invalid Environment")
+    # elif env == "humanoid_dir_multitask":
+    #     args = args_humanoid_dir_multitask.get_args(rest_args)
+    # elif env == "humanoid_dir_expert":
+    #     args = args_humanoid_dir_expert.get_args(rest_args)
+    # elif env == "humanoid_dir_varibad":
+    #     args = args_humanoid_dir_varibad.get_args(rest_args)
+    # elif env == "humanoid_dir_rl2":
+    #     args = args_humanoid_dir_rl2.get_args(rest_args)
+    # else:
+    #     raise Exception("Invalid Environment")
 
-    args.use_replay_buffer = use_replay_buffer
-    args.debug = debug
-    args.notes = notes
-    args.artifact = artifact
-    args.gpus_per_proc = gpus_per_proc
+    # --- PointRobot 2D Navigation ---
+    elif env == "pointrobot_multitask":
+        config_args = config.PointRobotMultitask
+    elif env == "pointrobot_rl2":
+        config_args = config.PointRobotRL2
+
     args.commit = Repo(".").head.commit.hexsha
-    return args
+    config_args = config_args()
+    for k, v in vars(args).items():
+        setattr(config_args, k, v)
+
+    return config_args
 
 
 def main():
