@@ -259,8 +259,8 @@ def train(args, run: Optional[Run] = None):
     wandb.finish()
 
 
-def sweep(**config):
-    return utl.sweep(args=parse_args(), config=config, train_func=train)
+def sweep(config: dict, args: list[str]):
+    return utl.sweep(args=parse_args(args), config=config, train_func=train)
 
 
 if __name__ == "__main__":
