@@ -275,6 +275,7 @@ class AntGoalRL2(RL2, AntGoal):
     lr_policy: float = 0.0003
     lr_vae: float = 0.0003
     max_rollouts_per_task: int = 2
+    num_frames: int = 2e8
     policy_anneal_lr: bool = True
     policy_initialisation: str = "orthogonal"
     policy_latent_embedding_dim: int = 64
