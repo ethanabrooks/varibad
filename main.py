@@ -2,15 +2,20 @@
 Main scripts to start experiments.
 Takes a flag --env-type (see below for choices) and loads the parameters from the respective config file.
 """
+from torchsnapshot import Snapshot
 import argparse
+import os
 import warnings
 from typing import Optional
 
 import numpy as np
 import torch
 from git import Repo
+from utils.tb_logger import TBLogger
 from wandb.sdk.wandb_run import Run
 
+from torchrl.data import ReplayBuffer
+from torchrl.data.replay_buffers import LazyMemmapStorage
 import wandb
 from config import config
 
@@ -204,6 +209,31 @@ def train(args, run: Optional[Run] = None):
         )
         run = wandb.run
 
+    # initialise tensorboard logger
+    logger = TBLogger(args, args.exp_label, debug=args.debug)
+
+    # initialise replay buffer
+    if args.replay_buffer:
+        replay_buffer_size = len(seed_list) * int(args.num_frames) // args.num_processes
+        replay_buffers = []
+
+        for i in range(args.num_processes):
+            replay_buffer_path = os.path.join(
+                logger.full_output_folder, "replay-buffers", str(i)
+            )
+            if not os.path.exists(replay_buffer_path):
+                os.makedirs(replay_buffer_path)
+            replay_buffers.append(
+                ReplayBuffer(
+                    LazyMemmapStorage(
+                        replay_buffer_size, scratch_dir=replay_buffer_path
+                    )
+                )
+            )
+
+    else:
+        replay_buffers = None
+
     for seed in seed_list:
         print("training", seed)
         args.seed = seed
@@ -213,14 +243,34 @@ def train(args, run: Optional[Run] = None):
             # If `disable_metalearner` is true, the file `learner.py` will be used instead of `metalearner.py`.
             # This is a stripped down version without encoder, decoder, stochastic latent variables, etc.
             learner = Learner(
-                args,
-                use_replay_buffer=args.replay_buffer,
-                debug=args.debug,
-                run=run,
+                args, logger=logger, replay_buffers=replay_buffers, run=run
             )
         else:
             learner = MetaLearner(args)
         learner.train()
+
+        if args.replay_buffer:
+            print("Replay buffer sizes:")
+            for i, buffer in enumerate(replay_buffers):
+                print(f"{i}: {len(buffer)} / {replay_buffer_size}")
+            print()
+
+    save_path = os.path.join(logger.full_output_folder, "models")
+    if args.replay_buffer:
+        replay_buffer_save_path = os.path.join(save_path, "replay-buffers")
+        Snapshot.take(
+            path=replay_buffer_save_path,
+            app_state={str(i): b for i, b in enumerate(replay_buffers)},
+        )
+        print(f"Saved replay-buffer to: {replay_buffer_save_path}")
+
+        if run is not None:
+            artifact = wandb.Artifact(
+                name=f"{args.env_name}-{args.exp_label}",
+                type="dataset",
+            )
+            artifact.add_dir(replay_buffer_save_path)
+            run.log_artifact(artifact, aliases=[f"{args.artifact}.{args.seed}"])
     wandb.finish()
 
 
