@@ -107,6 +107,18 @@ def parse_args(args=None):
     elif env == "walker_rl2":
         config_args = config.WalkerRL2
     #
+    # - Hopper -
+    elif env == "hopper_multitask":
+        config_args = config.HopperMultitask
+    elif env == "hopper_expert":
+        config_args = config.HopperExpert
+    # elif env == "walker_avg":
+    #     args = args_walker_avg.get_args(rest_args)
+    # elif env == "walker_varibad":
+    #     args = args_walker_varibad.get_args(rest_args)
+    elif env == "hopper_rl2":
+        config_args = config.HopperRL2
+    #
     # - HumanoidDir -
     # elif env == "humanoid_dir_multitask":
     #     args = args_humanoid_dir_multitask.get_args(rest_args)

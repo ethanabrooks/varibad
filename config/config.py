@@ -375,19 +375,51 @@ class PointRobotRL2(RL2, PointRobot):
 
 @dataclass
 class Walker(Args):
-    env_name: str = "Walker2D-v0"
+    env_name: str = "Walker2DRandParams-v0"
+    num_frames: int = 1e8
 
 
 @dataclass
 class WalkerExpert(Expert, Walker):
-    pass
+    norm_task_for_policy: bool = True
+    ppo_clip_param: float = 0.05
 
 
 @dataclass
 class WalkerMultitask(Multitask, Walker):
-    pass
+    results_log_dir: None = None
+    policy_state_embedding_dim: int = 128
+    policy_task_embedding_dim: int = 128
+    norm_task_for_policy: bool = True
+    policy_layers: list = field(default_factory=lambda: [256, 128])
+    ppo_num_minibatch: int = 2
+    ppo_clip_param: float = 0.05
+    policy_num_steps: int = 200
 
 
 @dataclass
 class WalkerRL2(RL2, Walker):
+    max_rollouts_per_task: int = 2
+    ppo_num_minibatch: int = 1
+    kl_weight: float = 0.1
+
+
+@dataclass
+class Hopper(Args):
+    env_name: str = "HopperRandParams-v0"
+    num_frames: int = 1e8
+
+
+@dataclass
+class HopperExpert(Hopper, WalkerExpert):
+    pass
+
+
+@dataclass
+class HopperMultitask(Hopper, WalkerMultitask):
+    pass
+
+
+@dataclass
+class HopperRL2(Hopper, WalkerRL2):
     pass
