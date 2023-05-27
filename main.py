@@ -30,7 +30,7 @@ def parse_args(args=None):
     parser.add_argument("--notes")
     parser.add_argument("--artifact")
     parser.add_argument("--gpus-per-proc", type=float, default=1)
-    args = parser.parse_args(args)
+    args, rest_args = parser.parse_known_args(args)
     env = args.env_type
 
     # --- GridWorld ---
@@ -110,14 +110,17 @@ def parse_args(args=None):
     # - Hopper -
     elif env == "hopper_multitask":
         config_args = config.HopperMultitask
+        old_args = args_hopper_multitask.get_args(rest_args)
     elif env == "hopper_expert":
         config_args = config.HopperExpert
+        old_args = args_hopper_expert.get_args(rest_args)
     # elif env == "walker_avg":
     #     args = args_walker_avg.get_args(rest_args)
     # elif env == "walker_varibad":
     #     args = args_walker_varibad.get_args(rest_args)
     elif env == "hopper_rl2":
         config_args = config.HopperRL2
+        old_args = args_hopper_rl2.get_args(rest_args)
     #
     # - HumanoidDir -
     # elif env == "humanoid_dir_multitask":
@@ -136,6 +139,16 @@ def parse_args(args=None):
         config_args = config.PointRobotMultitask
     elif env == "pointrobot_rl2":
         config_args = config.PointRobotRL2
+
+    config_args = config_args()
+    for k, v in vars(old_args).items():
+        if not hasattr(config_args, k):
+            print(f"\t{k}: {type(v).__name__} = {repr(v)}")
+    for k, v in vars(old_args).items():
+        if getattr(config_args, k) != v:
+            print(f"\t{k}: {type(v).__name__} = {repr(v)}")
+
+    exit()
 
     args.commit = Repo(".").head.commit.hexsha
     config_args = config_args()
