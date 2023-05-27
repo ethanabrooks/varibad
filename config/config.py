@@ -386,6 +386,7 @@ class WalkerExpert(Expert, Walker):
     num_frames: int = 5_000_000
     norm_task_for_policy: bool = True
     ppo_clip_param: float = 0.05
+    num_processes: int = 8
 
 
 @dataclass
