@@ -34,7 +34,13 @@ class Learner:
     Learner (no meta-learning), can be used to train avg/oracle/belief-oracle policies.
     """
 
-    def __init__(self, args, use_replay_buffer: bool, debug: bool, run: Optional[Run]):
+    def __init__(
+        self,
+        args,
+        replay_buffers: Optional[list[ReplayBuffer]],
+        logger: TBLogger,
+        run: Optional[Run],
+    ):
         print("Seed:", args.seed)
         self.args = args
         self.run = run
@@ -48,17 +54,8 @@ class Learner:
         self.frames = 0
         self.iter_idx = -1
 
-        # initialise tensorboard logger
-        self.logger = TBLogger(self.args, self.args.exp_label, debug=debug)
-
-        # initialise replay buffer
-        if use_replay_buffer:
-            self.replay_buffer_size = int(args.num_frames) // args.num_processes
-            self.replay_buffers = [
-                self.initialize_replay_buffer(i) for i in range(args.num_processes)
-            ]
-        else:
-            self.replay_buffers = None
+        self.logger = logger
+        self.replay_buffers = replay_buffers
 
         # initialise environments
         print("Making environments...", end=" ")
@@ -123,16 +120,6 @@ class Learner:
         # initialise policy
         self.policy_storage = self.initialise_policy_storage()
         self.policy = self.initialise_policy()
-
-    def initialize_replay_buffer(self, i: int):
-        replay_buffer_path = os.path.join(
-            self.logger.full_output_folder, "replay-buffers", str(i)
-        )
-        if not os.path.exists(replay_buffer_path):
-            os.makedirs(replay_buffer_path)
-        return ReplayBuffer(
-            LazyMemmapStorage(self.replay_buffer_size, scratch_dir=replay_buffer_path)
-        )
 
     def initialise_policy_storage(self):
         return OnlineStorage(
@@ -269,22 +256,18 @@ class Learner:
                 if self.replay_buffers is not None:
                     done_mdp = torch.tensor([i["done_mdp"] for i in infos])
                     done_mdp = done_mdp[..., None]
-                    batch = TensorDict(
-                        dict(
-                            state=current_state,
-                            task=task,
-                            actions=action,
-                            rewards=rew_raw,
-                            done=done_tensor,
-                            done_mdp=done_mdp,
-                            next_state=next_state,
-                        ),
-                        batch_size=[self.args.num_processes],
+                    source = dict(
+                        state=current_state,
+                        actions=action,
+                        rewards=rew_raw,
+                        done=done_tensor,
+                        done_mdp=done_mdp,
+                        next_state=next_state,
                     )
+                    if task is not None:
+                        source.update(task=task)
+                    batch = TensorDict(source, batch_size=[self.args.num_processes])
                     for buffer, transition in zip(self.replay_buffers, batch):
-                        assert (
-                            len(buffer) < self.replay_buffer_size
-                        ), "Exceeded replay buffer size."
                         buffer.add(transition)
 
                 # add experience to policy buffer
@@ -430,29 +413,6 @@ class Learner:
                 state = dict(actor_critic=self.policy.actor_critic)
                 Snapshot.take(path=save_path, app_state=state)
                 print(f"Saved state to: {save_path}")
-                if last_iter and self.replay_buffers is not None:
-                    replay_buffer_save_path = os.path.join(save_path, "replay-buffers")
-                    Snapshot.take(
-                        path=replay_buffer_save_path,
-                        app_state={
-                            str(i): b for i, b in enumerate(self.replay_buffers)
-                        },
-                    )
-                    print(f"Saved replay-buffer to: {replay_buffer_save_path}")
-                    print("Replay buffer sizes:")
-                    for i, buffer in enumerate(self.replay_buffers):
-                        print(f"{i}: {len(buffer)} / {self.replay_buffer_size}")
-                    print()
-
-                    if self.run is not None:
-                        artifact = wandb.Artifact(
-                            name=f"{self.args.env_name}-{self.args.exp_label}",
-                            type="dataset",
-                        )
-                        artifact.add_dir(replay_buffer_save_path)
-                        self.run.log_artifact(
-                            artifact, aliases=[f"{self.args.artifact}.{self.args.seed}"]
-                        )
 
                 # save normalisation params of envs
                 if self.args.norm_rew_for_policy:
