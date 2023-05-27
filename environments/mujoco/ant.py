@@ -87,7 +87,6 @@ class AntEnv(MujocoEnv):
         return_pos=False,
         **kwargs,
     ):
-
         num_episodes = args.max_rollouts_per_task
         if num_episodes is None:
             num_episodes = 1
@@ -117,6 +116,8 @@ class AntEnv(MujocoEnv):
         # (re)set environment
         env.reset_task()
         state, belief, task = utl.reset_env(env, args)
+        if task is not None:
+            [task] = task
         start_obs_raw = state.clone()
         task = task.view(-1) if task is not None else None
 
@@ -131,7 +132,6 @@ class AntEnv(MujocoEnv):
         start_pos = unwrapped_env.get_body_com("torso")[:2].copy()
 
         for episode_idx in range(num_episodes):
-
             curr_rollout_rew = []
             pos[episode_idx].append(start_pos)
 
@@ -160,7 +160,6 @@ class AntEnv(MujocoEnv):
                 )
 
             for step_idx in range(1, env._max_episode_steps + 1):
-
                 if step_idx == 1:
                     episode_prev_obs[episode_idx].append(start_obs_raw.clone())
                 else:
@@ -259,6 +258,8 @@ class AntEnv(MujocoEnv):
             plt.scatter(x, y, 1, "g")
 
             curr_task = env.get_task()
+            if curr_task is not None:
+                [curr_task] = curr_task
             plt.title("task: {}".format(curr_task), fontsize=15)
             if "Goal" in args.env_name:
                 plt.plot(curr_task[0], curr_task[1], "rx")
