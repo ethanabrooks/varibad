@@ -99,7 +99,7 @@ class RandomEnv(MetaEnv, MujocoEnv):
 
             if "body_mass" in self.rand_params:
                 rand_params = [
-                    random.uniform(-self.log_scale_limit, self.log_scale_limit)
+                    random.uniform(-self.log_scale_limit, 0)  # self.log_scale_limit)
                     for _ in range(np.prod(self.model.body_mass.shape))
                 ]
                 body_mass_multiplyers = np.array(1.5) ** np.array(rand_params).reshape(
@@ -112,7 +112,7 @@ class RandomEnv(MetaEnv, MujocoEnv):
             # body_inertia
             if "body_inertia" in self.rand_params:
                 rand_params = [
-                    random.uniform(-self.log_scale_limit, self.log_scale_limit)
+                    random.uniform(-self.log_scale_limit, 0)  # self.log_scale_limit)
                     for _ in range(np.prod(self.model.body_inertia.shape))
                 ]
                 body_inertia_multiplyers = np.array(1.5) ** np.array(
@@ -125,7 +125,7 @@ class RandomEnv(MetaEnv, MujocoEnv):
             # damping -> different multiplier for different dofs/joints
             if "dof_damping" in self.rand_params:
                 rand_params = [
-                    random.uniform(-self.log_scale_limit, self.log_scale_limit)
+                    random.uniform(-self.log_scale_limit, 0)  # self.log_scale_limit)
                     for _ in range(np.prod(self.model.dof_damping.shape))
                 ]
                 dof_damping_multipliers = np.array(1.3) ** np.array(
@@ -138,7 +138,7 @@ class RandomEnv(MetaEnv, MujocoEnv):
             # friction at the body components
             if "geom_friction" in self.rand_params:
                 rand_params = [
-                    random.uniform(-self.log_scale_limit, self.log_scale_limit)
+                    random.uniform(-self.log_scale_limit, 0)  # self.log_scale_limit)
                     for _ in range(np.prod(self.model.geom_friction.shape))
                 ]
                 dof_damping_multipliers = np.array(1.5) ** np.array(
