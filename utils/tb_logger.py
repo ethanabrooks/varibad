@@ -23,11 +23,11 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 class TBLogger:
-    def __init__(self, args, exp_label, debug=False):
+    def __init__(self, args, exp_label, seed_list: list[int], debug=False):
         self.output_name = (
             exp_label
             + "_"
-            + str(args.seed)
+            + ",".join(map(str, seed_list))
             + "_"
             + datetime.datetime.now().strftime("_%d:%m_%H:%M:%S")
         )

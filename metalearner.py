@@ -1,10 +1,9 @@
-import os
+import itertools
 import time
 
 import gym
 import numpy as np
 import torch
-import wandb
 
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
@@ -15,8 +14,6 @@ from utils import evaluation as utl_eval
 from utils import helpers as utl
 from utils.tb_logger import TBLogger
 from vae import VaribadVAE
-import itertools
-
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -26,7 +23,7 @@ class MetaLearner:
     Meta-Learner class with the main training loop for variBAD.
     """
 
-    def __init__(self, args):
+    def __init__(self, args, logger: TBLogger):
         self.args = args
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
@@ -38,7 +35,7 @@ class MetaLearner:
         self.iter_idx = -1
 
         # initialise tensorboard logger
-        self.logger = TBLogger(self.args, self.args.exp_label)
+        self.logger = logger
 
         def generate_tasks(train: bool):
             env_thunk = make_env(
@@ -547,52 +544,6 @@ class MetaLearner:
                 f"FPS {int(self.frames / (time.time() - start_time))}, "
                 f"\n Mean return (train): {returns_avg[-1].item()} \n"
             )
-
-        # --- save models ---
-
-        if (self.iter_idx + 1) % self.args.save_interval == 0:
-            save_path = os.path.join(self.logger.full_output_folder, "models")
-            if not os.path.exists(save_path):
-                os.mkdir(save_path)
-
-            idx_labels = [""]
-            if self.args.save_intermediate_models:
-                idx_labels.append(int(self.iter_idx))
-
-            for idx_label in idx_labels:
-                torch.save(
-                    self.policy.actor_critic,
-                    os.path.join(save_path, f"policy{idx_label}.pt"),
-                )
-                torch.save(
-                    self.vae.encoder, os.path.join(save_path, f"encoder{idx_label}.pt")
-                )
-                if self.vae.state_decoder is not None:
-                    torch.save(
-                        self.vae.state_decoder,
-                        os.path.join(save_path, f"state_decoder{idx_label}.pt"),
-                    )
-                if self.vae.reward_decoder is not None:
-                    torch.save(
-                        self.vae.reward_decoder,
-                        os.path.join(save_path, f"reward_decoder{idx_label}.pt"),
-                    )
-                if self.vae.task_decoder is not None:
-                    torch.save(
-                        self.vae.task_decoder,
-                        os.path.join(save_path, f"task_decoder{idx_label}.pt"),
-                    )
-
-                # save normalisation params of envs
-                if self.args.norm_rew_for_policy:
-                    rew_rms = self.envs.venv.ret_rms
-                    utl.save_obj(rew_rms, save_path, f"env_rew_rms{idx_label}")
-            if wandb.run is not None:
-                wandb.save(os.path.join(save_path, "*.pt"))
-                # TODO: grab from policy and save?
-                # if self.args.norm_obs_for_policy:
-                #     obs_rms = self.envs.venv.obs_rms
-                #     utl.save_obj(obs_rms, save_path, f"env_obs_rms{idx_label}")
 
         # --- log some other things ---
 
