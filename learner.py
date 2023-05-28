@@ -29,6 +29,10 @@ from utils.tb_logger import TBLogger
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
+def get_num_updates(num_frames, policy_num_steps, num_processes):
+    return int(num_frames) // policy_num_steps // num_processes
+
+
 class Learner:
     """
     Learner (no meta-learning), can be used to train avg/oracle/belief-oracle policies.
@@ -48,8 +52,8 @@ class Learner:
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
         # calculate number of updates and keep count of frames/iterations
-        self.num_updates = (
-            int(args.num_frames) // args.policy_num_steps // args.num_processes
+        self.num_updates = get_num_updates(
+            args.num_frames, args.policy_num_steps, args.num_processes
         )
         self.frames = 0
         self.iter_idx = -1
