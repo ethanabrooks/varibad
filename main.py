@@ -240,7 +240,7 @@ def train(args, run: Optional[Run] = None):
             )
 
     # initialise tensorboard logger
-    logger = TBLogger(args, args.exp_label, debug=args.debug)
+    logger = TBLogger(args, args.exp_label, debug=args.debug, seed_list=seed_list)
 
     # initialise replay buffer
     if args.replay_buffer:
@@ -282,7 +282,7 @@ def train(args, run: Optional[Run] = None):
                 args, logger=logger, replay_buffers=replay_buffers, run=run
             )
         else:
-            learner = MetaLearner(args)
+            learner = MetaLearner(args, logger=logger)
         learner.train()
 
         if args.replay_buffer:
@@ -291,7 +291,52 @@ def train(args, run: Optional[Run] = None):
                 print(f"{i}: {len(buffer)} / {replay_buffer_size}")
             print()
 
-    save_path = os.path.join(logger.full_output_folder, "models")
+        save_path = os.path.join(logger.full_output_folder, "models")
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
+
+        if len(seed_list) == 1:
+            seed_str = ""
+        else:
+            seed_str = ",".join(map(str, seed_list))
+        torch.save(
+            learner.policy.actor_critic,
+            os.path.join(save_path, f"policy{seed_str}.pt"),
+        )
+        try:
+            vae = learner.vae
+        except AttributeError:
+            vae = None
+        if vae is not None:
+            torch.save(vae.encoder, os.path.join(save_path, f"encoder{seed_str}.pt"))
+            if vae.state_decoder is not None:
+                torch.save(
+                    vae.state_decoder,
+                    os.path.join(save_path, f"state_decoder{seed_str}.pt"),
+                )
+            if vae.reward_decoder is not None:
+                torch.save(
+                    vae.reward_decoder,
+                    os.path.join(save_path, f"reward_decoder{seed_str}.pt"),
+                )
+            if vae.task_decoder is not None:
+                torch.save(
+                    vae.task_decoder,
+                    os.path.join(save_path, f"task_decoder{seed_str}.pt"),
+                )
+
+        # save normalisation params of envs
+        if args.norm_rew_for_policy:
+            rew_rms = learner.envs.venv.ret_rms
+            utl.save_obj(rew_rms, save_path, f"env_rew_rms{seed_str}")
+        if wandb.run is not None:
+            wandb.save(os.path.join(save_path, "*.pt"))
+            wandb.save(os.path.join(save_path, "*.pkl"))
+            # TODO: grab from policy and save?
+            # if self.args.norm_obs_for_policy:
+            #     obs_rms = self.envs.venv.obs_rms
+            #     utl.save_obj(obs_rms, save_path, f"env_obs_rms{idx_label}")
+
     if args.replay_buffer:
         replay_buffer_save_path = os.path.join(save_path, "replay-buffers")
         Snapshot.take(

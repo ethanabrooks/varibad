@@ -3,7 +3,6 @@ Base Learner, without Meta-Learning.
 Can be used to train for good average performance, or for the oracle environment.
 """
 
-import os
 import time
 from typing import Optional
 
@@ -12,10 +11,9 @@ import numpy as np
 import torch
 from tensordict import TensorDict
 from torchrl.data import ReplayBuffer
-from torchsnapshot import Snapshot
+import wandb
 from wandb.sdk.wandb_run import Run
 
-import wandb
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
 from algorithms.ppo import PPO
@@ -408,32 +406,6 @@ class Learner:
                     returns_avg[-1].item(),
                 )
             )
-
-        # save model
-        iter_idx = self.iter_idx + 1
-        last_iter = iter_idx == self.num_updates
-        if (iter_idx % self.args.save_interval == 0) or last_iter:
-            save_path = os.path.join(self.logger.full_output_folder, "models")
-            if not os.path.exists(save_path):
-                os.mkdir(save_path)
-
-            idx_labels = [""]
-            if self.args.save_intermediate_models:
-                idx_labels.append(int(self.iter_idx))
-
-            for idx_label in idx_labels:
-                state = dict(actor_critic=self.policy.actor_critic)
-                Snapshot.take(path=save_path, app_state=state)
-                print(f"Saved state to: {save_path}")
-
-                # save normalisation params of envs
-                if self.args.norm_rew_for_policy:
-                    rew_rms = self.envs.venv.ret_rms
-                    utl.save_obj(rew_rms, save_path, f"env_rew_rms{idx_label}")
-                # TODO: grab from policy and save?
-                # if self.args.norm_obs_for_policy:
-                #     obs_rms = self.envs.venv.obs_rms
-                #     utl.save_obj(obs_rms, save_path, f"env_obs_rms{idx_label}")
 
         # --- log some other things ---
 
