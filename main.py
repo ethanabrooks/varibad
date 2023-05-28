@@ -21,7 +21,7 @@ from config import config
 
 # get configs
 from environments.parallel_envs import make_vec_envs
-from learner import Learner
+from learner import Learner, get_num_updates
 from metalearner import MetaLearner
 from utils import helpers as utl
 from utils.helpers import get_project_name, get_tags
@@ -214,7 +214,13 @@ def train(args, run: Optional[Run] = None):
 
     # initialise replay buffer
     if args.replay_buffer:
-        replay_buffer_size = len(seed_list) * int(args.num_frames) // args.num_processes
+        replay_buffer_size = (
+            len(seed_list)
+            * get_num_updates(
+                args.num_frames, args.policy_num_steps, args.num_processes
+            )
+            * args.policy_num_steps
+        )
         replay_buffers = []
 
         for i in range(args.num_processes):
