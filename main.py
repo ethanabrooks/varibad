@@ -4,6 +4,7 @@ Takes a flag --env-type (see below for choices) and loads the parameters from th
 """
 from torchsnapshot import Snapshot
 import argparse
+import json
 import os
 import warnings
 from typing import Optional
@@ -212,8 +213,17 @@ def train(args, run: Optional[Run] = None):
     seed_list = [args.seed] if isinstance(args.seed, int) else args.seed
 
     if not args.debug:
+        config = {}
+        for k, v in vars(args).items():
+            try:
+                json.dumps(v)
+            except TypeError:
+                continue
+            config[k] = v
+
         wandb.init(
             project=args.project_name,
+            config=config,
             name=f"{args.env_name}-{args.exp_label}",
             sync_tensorboard=True,
             tags=get_tags(args.max_rollouts_per_task),
