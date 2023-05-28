@@ -2,6 +2,7 @@
 Taken from https://github.com/openai/baselines
 """
 from multiprocessing import Pipe, Process
+import time
 
 import numpy as np
 
@@ -12,8 +13,16 @@ def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.x()
     try:
+        sleep_time = 1
         while True:
-            cmd, data = remote.recv()
+            try:
+                cmd, data = remote.recv()
+                sleep_time = 1
+            except EOFError:
+                print(".", end="", flush=True)
+                time.sleep(sleep_time)
+                sleep_time *= 2
+                continue
             if cmd == "step":
                 ob, reward, done, info = env.step(data)
                 remote.send((ob, reward, done, info))
