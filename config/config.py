@@ -107,7 +107,6 @@ class Expert(Args):
 @dataclass
 class Multitask(Args):
     exp_label: str = "multitask"
-    max_rollouts_per_task: int = None
     norm_state_for_policy: bool = True
     norm_latent_for_policy: bool = True
     norm_belief_for_policy: bool = True
@@ -118,6 +117,12 @@ class Multitask(Args):
     policy_state_embedding_dim: int = 32
     policy_task_embedding_dim: int = 32
     ppo_num_minibatch: int = 4
+
+
+@dataclass
+class AD(Multitask):
+    exp_label: str = "AD"
+    max_rollouts_per_task: int = None
 
 
 @dataclass
@@ -217,6 +222,11 @@ class AlchemyMultitask(Alchemy, Multitask):
 
 
 @dataclass
+class AlchemyAD(AD, AlchemyMultitask):
+    pass
+
+
+@dataclass
 class AlchemyRL2(RL2, Alchemy):
     pass
 
@@ -238,6 +248,11 @@ class AntDirMultitask(Multitask, AntDir):
     policy_state_embedding_dim: int = 64
     policy_task_embedding_dim: int = 64
     ppo_num_minibatch: int = 2
+
+
+@dataclass
+class AntDirAD(AD, AntDirMultitask):
+    pass
 
 
 @dataclass
@@ -269,6 +284,11 @@ class AntGoalMultitask(Multitask, AntGoal):
     policy_state_embedding_dim: int = 64
     policy_task_embedding_dim: int = 64
     ppo_num_minibatch: int = 2
+
+
+@dataclass
+class AntGoalAD(AD, AntGoalMultitask):
+    pass
 
 
 @dataclass
@@ -310,6 +330,11 @@ class CheetahDirMultitask(Multitask, CheetahDir):
 
 
 @dataclass
+class CheetahDirAD(AD, CheetahDirMultitask):
+    pass
+
+
+@dataclass
 class CheetahDirRL2(RL2, CheetahDir):
     kl_weight: float = 0.1
     max_rollouts_per_task: int = 2
@@ -338,6 +363,11 @@ class CheetahVelMultitask(Multitask, CheetahVel):
 
 
 @dataclass
+class CheetahVelAD(AD, CheetahVelMultitask):
+    pass
+
+
+@dataclass
 class CheetahVelRL2(RL2, CheetahVel):
     kl_weight: float = 0.1
     max_rollouts_per_task: int = 2
@@ -350,6 +380,11 @@ class CheetahVelRL2(RL2, CheetahVel):
 class PointRobot(Args):
     env_name: str = "SparsePointEnv-v0"
     num_frames: int = 5e7
+
+
+@dataclass
+class PointRobotAD(AD, PointRobot):
+    pass
 
 
 @dataclass
@@ -398,6 +433,11 @@ class WalkerMultitask(Multitask, Walker):
     ppo_num_minibatch: int = 2
     ppo_clip_param: float = 0.05
     policy_num_steps: int = 200
+
+
+@dataclass
+class WalkerAD(AD, WalkerMultitask):
+    pass
 
 
 @dataclass

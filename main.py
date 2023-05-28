@@ -49,7 +49,9 @@ def parse_args(args=None):
 
     # --- Alchemy ---
 
-    if env == "alchemy_multitask":
+    if env == "alchemy_ad":
+        config_args = config.AlchemyAD
+    elif env == "alchemy_multitask":
         config_args = config.AlchemyMultitask
     elif env == "alchemy_rl2":
         config_args = config.AlchemyRL2
@@ -57,6 +59,8 @@ def parse_args(args=None):
     # --- MUJOCO ---
     #
     # - AntDir -
+    elif env == "ant_dir_ad":
+        config_args = config.AntDirAD
     elif env == "ant_dir_expert":
         config_args = config.AntDirExpert
     elif env == "ant_dir_multitask":
@@ -67,6 +71,8 @@ def parse_args(args=None):
         config_args = config.AntDirRL2
     #
     # - AntGoal -
+    elif env == "ant_goal_ad":
+        config_args = config.AntGoalAD
     elif env == "ant_goal_expert":
         config_args = config.AntGoalExpert
     elif env == "ant_goal_multitask":
@@ -79,6 +85,8 @@ def parse_args(args=None):
         config_args = config.AntGoalRL2
 
     # - CheetahDir -
+    elif env == "cheetah_dir_ad":
+        config_args = config.CheetahDirAD
     elif env == "cheetah_dir_multitask":
         config_args = config.CheetahDirMultitask
     elif env == "cheetah_dir_expert":
@@ -89,6 +97,8 @@ def parse_args(args=None):
         config_args = config.CheetahDirRL2
     #
     # - CheetahVel -
+    elif env == "cheetah_vel_ad":
+        config_args = config.CheetahVelAD
     elif env == "cheetah_vel_multitask":
         config_args = config.CheetahVelMultitask
     elif env == "cheetah_vel_expert":
@@ -101,6 +111,8 @@ def parse_args(args=None):
         config_args = config.CheetahVelRL2
     #
     # - Walker -
+    elif env == "walker_ad":
+        config_args = config.WalkerAD
     elif env == "walker_multitask":
         config_args = config.WalkerMultitask
     elif env == "walker_expert":
