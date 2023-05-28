@@ -31,7 +31,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-type", default="gridworld_varibad")
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--replay_buffer", action="store_true")
+    parser.add_argument("--replay-buffer", action="store_true")
     parser.add_argument("--notes")
     parser.add_argument("--artifact")
     parser.add_argument("--gpus-per-proc", type=float, default=1)
