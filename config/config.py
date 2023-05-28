@@ -207,7 +207,7 @@ class Alchemy(Args):
 
 
 @dataclass
-class AlchemyExpert(Multitask, Expert):
+class AlchemyExpert(Alchemy, Expert):
     pass
 
 
