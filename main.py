@@ -223,7 +223,7 @@ def train(args, run: Optional[Run] = None):
         )
         replay_buffers = []
 
-        for i in range(args.num_processes):
+        for i in range(1 if args.single_task_mode else args.num_processes):
             replay_buffer_path = os.path.join(
                 logger.full_output_folder, "replay-buffers", str(i)
             )
