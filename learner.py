@@ -11,6 +11,7 @@ import numpy as np
 import torch
 from tensordict import TensorDict
 from torchrl.data import ReplayBuffer
+import wandb
 from wandb.sdk.wandb_run import Run
 
 from algorithms.a2c import A2C
@@ -71,6 +72,14 @@ class Learner:
             tasks=None,
         )
         print("✓")
+        if wandb.run is not None:
+            spec = self.envs.get_env_attr("spec")
+            try:
+                max_episode_stpes = spec.max_episode_steps
+            except AttributeError:
+                max_episode_stpes = None
+            if max_episode_stpes is not None:
+                wandb.run.tags += (f"{max_episode_stpes}-timesteps",)
 
         if self.args.single_task_mode:
             # get the current tasks (which will be num_process many different tasks)
