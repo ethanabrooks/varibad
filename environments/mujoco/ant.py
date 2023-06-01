@@ -1,3 +1,4 @@
+from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -76,8 +77,54 @@ class AntEnv(MujocoEnv):
             task = self.sample_tasks(1)[0]
         self.set_task(task)
 
-    @staticmethod
+    def plot_task(curr_task: np.ndarray):
+        plt.plot(curr_task[0], curr_task[1], "rx")
+
+    @classmethod
+    def plot(
+        cls,
+        observations: np.ndarray,
+        curr_task: np.ndarray,
+        num_episodes: int = 1,
+        image_folder: Optional[str] = None,
+    ):
+        # plot the movement of the ant
+        # print(pos)
+        plt.figure(figsize=(5, 4 * num_episodes))
+        min_dim = -3.5
+        max_dim = 3.5
+        span = max_dim - min_dim
+
+        for i in range(num_episodes):
+            plt.subplot(num_episodes, 1, i + 1)
+
+            x = list(map(lambda o: o[0], observations[i]))
+            y = list(map(lambda o: o[1], observations[i]))
+            plt.plot(x[0], y[0], "bo")
+
+            plt.scatter(x, y, 1, "g")
+
+            plt.title("task: {}".format(curr_task), fontsize=15)
+            cls.plot_task(curr_task)
+
+            plt.ylabel("y-position (ep {})".format(i), fontsize=15)
+
+            if i == num_episodes - 1:
+                plt.xlabel("x-position", fontsize=15)
+                plt.ylabel("y-position (ep {})".format(i), fontsize=15)
+            plt.xlim(min_dim - 0.05 * span, max_dim + 0.05 * span)
+            plt.ylim(min_dim - 0.05 * span, max_dim + 0.05 * span)
+
+        plt.tight_layout()
+        if image_folder is not None:
+            plt.savefig("{}/behaviour".format(image_folder))
+            plt.close()
+        else:
+            plt.show()
+
+    @classmethod
     def visualise_behaviour(
+        cls,
         env,
         args,
         policy,
@@ -243,41 +290,7 @@ class AntEnv(MujocoEnv):
 
         # plot the movement of the ant
         # print(pos)
-        plt.figure(figsize=(5, 4 * num_episodes))
-        min_dim = -3.5
-        max_dim = 3.5
-        span = max_dim - min_dim
-
-        for i in range(num_episodes):
-            plt.subplot(num_episodes, 1, i + 1)
-
-            x = list(map(lambda p: p[0], pos[i]))
-            y = list(map(lambda p: p[1], pos[i]))
-            plt.plot(x[0], y[0], "bo")
-
-            plt.scatter(x, y, 1, "g")
-
-            curr_task = env.get_task()
-            if curr_task is not None:
-                [curr_task] = curr_task
-            plt.title("task: {}".format(curr_task), fontsize=15)
-            if "Goal" in args.env_name:
-                plt.plot(curr_task[0], curr_task[1], "rx")
-
-            plt.ylabel("y-position (ep {})".format(i), fontsize=15)
-
-            if i == num_episodes - 1:
-                plt.xlabel("x-position", fontsize=15)
-                plt.ylabel("y-position (ep {})".format(i), fontsize=15)
-            plt.xlim(min_dim - 0.05 * span, max_dim + 0.05 * span)
-            plt.ylim(min_dim - 0.05 * span, max_dim + 0.05 * span)
-
-        plt.tight_layout()
-        if image_folder is not None:
-            plt.savefig("{}/behaviour".format(image_folder))
-            plt.close()
-        else:
-            plt.show()
+        cls.plot(episode_prev_obs, env.get_task(), num_episodes)
 
         if not return_pos:
             return (

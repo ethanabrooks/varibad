@@ -273,6 +273,7 @@ class AntGoalExpert(Expert, AntGoal):
     lr_policy: float = 0.001
     policy_anneal_lr: bool = True
     policy_initialisation: str = "orthogonal"
+    vis_interval: int = 1
 
 
 @dataclass
