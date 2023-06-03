@@ -5,7 +5,6 @@ from ray import tune
 from main import sweep
 
 parser = ArgumentParser()
-parser.add_argument("--gpus-per-proc", type=float, default=0.5)
 parser.add_argument("--seq-len", type=int, default=16)
 parser.add_argument("--num-procs", type=int, default=16)
 args, rest_args = parser.parse_known_args()
