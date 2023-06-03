@@ -1,6 +1,7 @@
 import random
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from environments.mujoco.ant import AntEnv
 
@@ -26,7 +27,6 @@ class AntGoalEnv(AntEnv):
         )
         survive_reward = 0.0
         reward = goal_reward - ctrl_cost - contact_cost + survive_reward
-        state = self.state_vector()
         done = False
         ob = self._get_obs()
         return (
@@ -52,6 +52,9 @@ class AntGoalEnv(AntEnv):
 
     def get_task(self):
         return np.array(self.goal_pos)
+
+    def plot_task(curr_task: np.ndarray):
+        plt.plot(curr_task[0], curr_task[1], "rx")
 
     def _get_obs(self):
         return np.concatenate(

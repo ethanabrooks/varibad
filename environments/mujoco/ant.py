@@ -1,4 +1,5 @@
 from typing import Optional
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -78,7 +79,7 @@ class AntEnv(MujocoEnv):
         self.set_task(task)
 
     def plot_task(curr_task: np.ndarray):
-        plt.plot(curr_task[0], curr_task[1], "rx")
+        raise NotImplementedError
 
     @classmethod
     def plot(
@@ -90,7 +91,7 @@ class AntEnv(MujocoEnv):
     ):
         # plot the movement of the ant
         # print(pos)
-        plt.figure(figsize=(5, 4 * num_episodes))
+        fig = plt.figure(figsize=(5, 4 * num_episodes))
         min_dim = -3.5
         max_dim = 3.5
         span = max_dim - min_dim
@@ -121,6 +122,8 @@ class AntEnv(MujocoEnv):
             plt.close()
         else:
             plt.show()
+
+        return fig
 
     @classmethod
     def visualise_behaviour(
@@ -290,7 +293,9 @@ class AntEnv(MujocoEnv):
 
         # plot the movement of the ant
         # print(pos)
-        cls.plot(episode_prev_obs, env.get_task(), num_episodes)
+        observations = [o.cpu().numpy() for o in episode_prev_obs]
+        [task] = env.get_task()
+        cls.plot(observations, task, num_episodes)
 
         if not return_pos:
             return (
