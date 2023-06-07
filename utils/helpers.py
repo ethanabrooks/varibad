@@ -5,6 +5,7 @@ import pickle
 
 # import pickle5 as pickle
 import random
+import sys
 import time
 import urllib
 import warnings
@@ -432,7 +433,7 @@ def sweep(args, config: dict, train_func):
         for k, v in sweep_params.items():
             setattr(args, k, v)
         sleep_time = 1
-        config = {}
+        config = dict(argv=sys.argv)
         for k, v in vars(args).items():
             try:
                 json.dumps(v)
