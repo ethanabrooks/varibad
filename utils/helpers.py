@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import pickle
 
@@ -431,10 +432,17 @@ def sweep(args, config: dict, train_func):
         for k, v in sweep_params.items():
             setattr(args, k, v)
         sleep_time = 1
+        config = {}
+        for k, v in vars(args).items():
+            try:
+                json.dumps(v)
+            except TypeError:
+                v = str(v)
+            config[k] = v
         while True:
             try:
                 run = setup_wandb(
-                    config=vars(args),
+                    config=config,
                     group=group,
                     project=args.project_name,
                     rank_zero_only=False,
