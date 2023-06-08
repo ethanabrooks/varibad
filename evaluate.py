@@ -23,15 +23,15 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--loadpath")
     parser.add_argument("--num_episodes", type=int)
-    parser.add_argument("--test", action="store_true")
+    parser.add_argument("--test-threshold", type=float)
     args, rest_args = parser.parse_known_args()
     loadpath = args.loadpath
     num_episodes = args.num_episodes
-    test = args.test
+    test_threshold = args.test_threshold
     args = base_parse_args(rest_args)
-    args.test = test
     args.loadpath = loadpath
     args.num_episodes = num_episodes
+    args.test_threshold = test_threshold
     return args
 
 
@@ -75,6 +75,7 @@ def evaluate(args):
             logger=logger,
             encoder=metalearner.vae.encoder,
             num_episodes=args.num_episodes,
+            test_threshold=args.test_threshold,
         )
     wandb.finish()
     print("=================== DONE =====================")

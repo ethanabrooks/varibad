@@ -5,8 +5,7 @@ from environments.mujoco.rand_param_envs.gym.envs.mujoco import mujoco_env
 
 
 class Walker2dEnv(mujoco_env.MujocoEnv, utils.EzPickle):
-    def __init__(self, test: bool = False):
-        self.test = test
+    def __init__(self):
         mujoco_env.MujocoEnv.__init__(self, "walker2d.xml", 4)
         utils.EzPickle.__init__(self)
 
