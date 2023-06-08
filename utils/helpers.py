@@ -10,7 +10,7 @@ import time
 import urllib
 import warnings
 from distutils.util import strtobool
-from typing import Callable, Optional
+from typing import Optional
 
 import numpy as np
 import tomli
@@ -450,6 +450,7 @@ def sweep(args, config: dict, train_func):
                     tags=get_tags(args.max_rollouts_per_task),
                     notes=args.notes,
                     sync_tensorboard=True,
+                    resume="never",
                 )
                 break
             except wandb.errors.CommError:
