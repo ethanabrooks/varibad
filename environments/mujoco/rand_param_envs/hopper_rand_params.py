@@ -5,8 +5,7 @@ from environments.mujoco.rand_param_envs.gym import utils
 
 
 class HopperRandParamsEnv(RandomEnv, utils.EzPickle):
-    def __init__(self, log_scale_limit=3.0, test: bool = False):
-        self.test = test
+    def __init__(self, log_scale_limit=3.0):
         self._max_episode_steps = 200
         self._elapsed_steps = -1  # the thing below takes one step
         RandomEnv.__init__(self, log_scale_limit, "hopper.xml", 4)
