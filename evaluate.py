@@ -5,13 +5,13 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-from wandb.sdk.wandb_run import Run
 
 import utils.helpers as utl
 import wandb
 from main import parse_args as base_parse_args
 from metalearner import MetaLearner
 from utils import evaluation
+from utils.tb_logger import TBLogger
 
 
 def load_pickle(loadpath: Path):
@@ -22,16 +22,16 @@ def load_pickle(loadpath: Path):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--loadpath")
-    parser.add_argument("--num_episodes", type=int)
-    parser.add_argument("--test", action="store_true")
+    parser.add_argument("--num-episodes", type=int, default=1)
+    parser.add_argument("--test-threshold", type=float)
     args, rest_args = parser.parse_known_args()
     loadpath = args.loadpath
     num_episodes = args.num_episodes
-    test = args.test
+    test_threshold = args.test_threshold
     args = base_parse_args(rest_args)
-    args.test = test
     args.loadpath = loadpath
     args.num_episodes = num_episodes
+    args.test_threshold = test_threshold
     return args
 
 
@@ -53,8 +53,9 @@ def evaluate(args):
         seeds = [seeds]
     for seed in seeds:
         args.seed = seed
-        metalearner = MetaLearner(args)
-        logger = metalearner.logger
+        # initialise tensorboard logger
+        logger = TBLogger(args, args.exp_label, debug=args.debug, seed_list=[args.seed])
+        metalearner = MetaLearner(args, logger=logger)
 
         for name, obj, attr in [
             ("encoder", metalearner.vae, "encoder"),

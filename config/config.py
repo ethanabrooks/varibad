@@ -17,6 +17,7 @@ class Args:
     single_task_mode: bool = (
         False  # train policy on one (randomly chosen environment only)
     )
+    test_threshold: Optional[float] = None  # parameter for setting test env
 
     # --- POLICY ---
     # what to pass to the policy (note this is after the encoder
