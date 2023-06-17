@@ -2,21 +2,21 @@
 Main scripts to start experiments.
 Takes a flag --env-type (see below for choices) and loads the parameters from the respective config file.
 """
-from torchsnapshot import Snapshot
 import argparse
 import json
 import os
+import urllib
 import warnings
 from typing import Optional
 
 import numpy as np
 import torch
 from git import Repo
-from utils.tb_logger import TBLogger
-from wandb.sdk.wandb_run import Run
-
 from torchrl.data import ReplayBuffer
 from torchrl.data.replay_buffers import LazyMemmapStorage
+from torchsnapshot import Snapshot
+from wandb.sdk.wandb_run import Run
+
 import wandb
 from config import config
 
@@ -26,6 +26,7 @@ from learner import Learner, get_num_updates
 from metalearner import MetaLearner
 from utils import helpers as utl
 from utils.helpers import get_project_name, get_tags
+from utils.tb_logger import TBLogger
 
 
 def parse_args(args=None):
@@ -156,6 +157,8 @@ def parse_args(args=None):
         config_args = config.PointRobotRL2
 
     args.commit = Repo(".").head.commit.hexsha
+    args.device = 0
+    args.exp_group = None
     config_args = config_args()
     for k, v in vars(args).items():
         setattr(config_args, k, v)
@@ -222,14 +225,19 @@ def train(args, run: Optional[Run] = None):
             config[k] = v
 
         wandb.init(
-            project=args.project_name,
             config=config,
+            group=args.exp_group,
             name=f"{args.env_name}-{args.exp_label}",
+            notes=args.notes,
+            project=args.project_name,
             sync_tensorboard=True,
             tags=get_tags(args.max_rollouts_per_task),
-            notes=args.notes,
         )
         run = wandb.run
+        if args.exp_group is not None:
+            print(
+                f"wandb: ️👪 View group at {run.get_project_url()}/groups/{urllib.parse.quote(args.exp_group)}/workspace"
+            )
 
     # initialise tensorboard logger
     logger = TBLogger(args, args.exp_label, debug=args.debug)

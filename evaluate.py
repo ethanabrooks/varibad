@@ -1,5 +1,4 @@
 import argparse
-import wandb
 import os
 import pickle
 from pathlib import Path
@@ -9,6 +8,7 @@ import torch.nn as nn
 from wandb.sdk.wandb_run import Run
 
 import utils.helpers as utl
+import wandb
 from main import parse_args as base_parse_args
 from metalearner import MetaLearner
 from utils import evaluation

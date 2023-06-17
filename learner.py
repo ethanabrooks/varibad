@@ -25,8 +25,6 @@ from utils import evaluation as utl_eval
 from utils import helpers as utl
 from utils.tb_logger import TBLogger
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 def get_num_updates(num_frames, policy_num_steps, num_processes):
     return int(num_frames) // policy_num_steps // num_processes
@@ -47,6 +45,9 @@ class Learner:
         print("Seed:", args.seed)
         self.args = args
         self.run = run
+        self.device = torch.device(
+            f"cuda:{args.device}" if torch.cuda.is_available() else "cpu"
+        )
 
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
@@ -67,7 +68,7 @@ class Learner:
             seed=args.seed,
             num_processes=args.num_processes,
             gamma=args.policy_gamma,
-            device=device,
+            device=self.device,
             episodes_per_task=self.args.max_rollouts_per_task,
             normalise_rew=args.norm_rew_for_policy,
             ret_rms=None,
@@ -96,7 +97,7 @@ class Learner:
                 seed=args.seed,
                 num_processes=args.num_processes,
                 gamma=args.policy_gamma,
-                device=device,
+                device=self.device,
                 episodes_per_task=self.args.max_rollouts_per_task,
                 normalise_rew=args.norm_rew_for_policy,
                 ret_rms=None,
@@ -166,7 +167,7 @@ class Learner:
             #
             action_space=self.envs.action_space,
             init_std=self.args.policy_init_std,
-        ).to(device)
+        ).to(self.device)
 
         # initialise policy trainer
         if self.args.policy == "a2c":
@@ -245,14 +246,14 @@ class Learner:
                 # create mask for episode ends
                 masks_done = torch.FloatTensor(
                     [[0.0] if done_ else [1.0] for done_ in done]
-                ).to(device)
+                ).to(self.device)
                 # bad_mask is true if episode ended because time limit was reached
                 bad_masks = torch.FloatTensor(
                     [
                         [0.0] if "bad_transition" in info.keys() else [1.0]
                         for info in infos
                     ]
-                ).to(device)
+                ).to(self.device)
 
                 # reset environments that are done
                 done_indices = np.argwhere(done.flatten()).flatten()

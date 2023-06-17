@@ -1,8 +1,8 @@
 """
 Taken from https://github.com/openai/baselines
 """
-from multiprocessing import Pipe, Process
 import time
+from multiprocessing import Pipe, Process
 
 import numpy as np
 

@@ -1,11 +1,12 @@
+import itertools
 import os
 import time
 
 import gym
 import numpy as np
 import torch
-import wandb
 
+import wandb
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
 from algorithms.ppo import PPO
@@ -15,8 +16,6 @@ from utils import evaluation as utl_eval
 from utils import helpers as utl
 from utils.tb_logger import TBLogger
 from vae import VaribadVAE
-import itertools
-
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

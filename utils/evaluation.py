@@ -1,6 +1,7 @@
-from collections import defaultdict
 import numbers
+from collections import defaultdict
 from typing import Optional
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
