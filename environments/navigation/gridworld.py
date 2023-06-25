@@ -12,8 +12,6 @@ from torch.nn import functional as F
 
 from utils import helpers as utl
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class GridNavi(gym.Env):
     def __init__(self, num_cells=5, num_steps=15):
@@ -67,7 +65,6 @@ class GridNavi(gym.Env):
         return self._belief_state
 
     def update_belief(self, state, action):
-
         on_goal = state[0] == self._goal[0] and state[1] == self._goal[1]
 
         # hint
@@ -115,7 +112,6 @@ class GridNavi(gym.Env):
         return self._env_state
 
     def step(self, action):
-
         if isinstance(action, np.ndarray) and action.ndim == 1:
             action = action[0]
         assert self.action_space.contains(action)
@@ -181,7 +177,7 @@ class GridNavi(gym.Env):
             pos = np.where(classes[i] == mat)
             goals[i, 0] = float(pos[0][0])
             goals[i, 1] = float(pos[1][0])
-        goals = torch.from_numpy(goals).to(device).float()
+        goals = torch.from_numpy(goals).to(self.device).float()
         return goals
 
     def goal_to_onehot_id(self, pos):
@@ -190,7 +186,7 @@ class GridNavi(gym.Env):
             cl = cl.view(-1, 1)
         nb_digits = self.num_cells**2
         # One hot encoding buffer that you create out of the loop and just keep reusing
-        y_onehot = torch.FloatTensor(pos.shape[0], nb_digits).to(device)
+        y_onehot = torch.FloatTensor(pos.shape[0], nb_digits).to(self.device)
         # In your for loop
         y_onehot.zero_()
         y_onehot.scatter_(1, cl, 1)
@@ -219,6 +215,7 @@ class GridNavi(gym.Env):
         The environment passed to this method should be a SubProcVec or DummyVecEnv, not the raw env!
         """
 
+        device = utl.get_device(args.device)
         num_episodes = args.max_rollouts_per_task
         unwrapped_env = env.venv.unwrapped.envs[0]
 
@@ -258,13 +255,11 @@ class GridNavi(gym.Env):
         start_obs = state.clone()
 
         for episode_idx in range(args.max_rollouts_per_task):
-
             curr_goal = env.get_task()
             curr_rollout_rew = []
             curr_rollout_goal = []
 
             if encoder is not None:
-
                 if episode_idx == 0:
                     # reset to prior
                     (
@@ -290,7 +285,6 @@ class GridNavi(gym.Env):
                 episode_beliefs[episode_idx].append(belief)
 
             for step_idx in range(1, env._max_episode_steps + 1):
-
                 if step_idx == 1:
                     episode_prev_obs[episode_idx].append(start_obs.clone())
                 else:
@@ -506,7 +500,6 @@ def plot_bb(
     # loop through the experiences
     for episode_idx in range(num_episodes):
         for step_idx in range(num_steps):
-
             curr_obs = episode_all_obs[episode_idx][: step_idx + 1]
             curr_goal = episode_goals[episode_idx]
 

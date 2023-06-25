@@ -9,8 +9,6 @@ from gym import Env, spaces
 
 from utils import helpers as utl
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 def semi_circle_goal_sampler():
     r = 1.0
@@ -85,7 +83,6 @@ class PointEnv(Env):
         return np.copy(self._state)
 
     def step(self, action):
-
         action = np.clip(action, self.action_space.low, self.action_space.high)
         assert self.action_space.contains(action), action
 
@@ -107,7 +104,7 @@ class PointEnv(Env):
         return_pos=False,
         **kwargs,
     ):
-
+        device = utl.get_device(args.device)
         num_episodes = args.max_rollouts_per_task
         if num_episodes is None:
             num_episodes = 1
@@ -150,7 +147,6 @@ class PointEnv(Env):
         start_pos = state
 
         for episode_idx in range(num_episodes):
-
             curr_rollout_rew = []
             pos[episode_idx].append(start_pos[0])
 
@@ -179,7 +175,6 @@ class PointEnv(Env):
                 )
 
             for step_idx in range(1, env._max_episode_steps + 1):
-
                 if step_idx == 1:
                     episode_prev_obs[episode_idx].append(start_obs_raw.clone())
                 else:

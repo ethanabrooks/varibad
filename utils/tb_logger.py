@@ -8,8 +8,6 @@ import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -81,7 +79,7 @@ class TBLogger:
                 config = {k: v for (k, v) in vars(args).items() if k != "device"}
             except:
                 config = args
-            config.update(device=device.type)
+            config.update(device=self.device.type)
             json.dump(config, f, indent=2, cls=NumpyEncoder)
 
     def add(self, name, value, x_pos):

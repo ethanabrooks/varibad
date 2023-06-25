@@ -17,8 +17,6 @@ from utils import helpers as utl
 from utils.tb_logger import TBLogger
 from vae import VaribadVAE
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class MetaLearner:
     """
@@ -27,6 +25,7 @@ class MetaLearner:
 
     def __init__(self, args):
         self.args = args
+        self.device = utl.get_device(args.device)
         utl.seed(self.args.seed, self.args.deterministic_execution)
 
         # calculate number of updates and keep count of frames/iterations
@@ -69,7 +68,7 @@ class MetaLearner:
             seed=args.seed,
             num_processes=args.num_processes,
             gamma=args.policy_gamma,
-            device=device,
+            device=self.device,
             episodes_per_task=self.args.max_rollouts_per_task,
             normalise_rew=args.norm_rew_for_policy,
             ret_rms=None,
@@ -89,7 +88,7 @@ class MetaLearner:
                 seed=args.seed,
                 num_processes=args.num_processes,
                 gamma=args.policy_gamma,
-                device=device,
+                device=self.device,
                 episodes_per_task=self.args.max_rollouts_per_task,
                 normalise_rew=args.norm_rew_for_policy,
                 ret_rms=None,
@@ -165,7 +164,7 @@ class MetaLearner:
             #
             action_space=self.envs.action_space,
             init_std=self.args.policy_init_std,
-        ).to(device)
+        ).to(self.device)
 
         # initialise policy trainer
         if self.args.policy == "a2c":
@@ -263,21 +262,21 @@ class MetaLearner:
 
                 done = (
                     torch.from_numpy(np.array(done, dtype=int))
-                    .to(device)
+                    .to(self.device)
                     .float()
                     .view((-1, 1))
                 )
                 # create mask for episode ends
                 masks_done = torch.FloatTensor(
                     [[0.0] if done_ else [1.0] for done_ in done]
-                ).to(device)
+                ).to(self.device)
                 # bad_mask is true if episode ended because time limit was reached
                 bad_masks = torch.FloatTensor(
                     [
                         [0.0] if "bad_transition" in info.keys() else [1.0]
                         for info in infos
                     ]
-                ).to(device)
+                ).to(self.device)
 
                 with torch.no_grad():
                     # compute next embedding (for next loop and/or value prediction bootstrap)
@@ -409,16 +408,16 @@ class MetaLearner:
         # get the embedding / hidden state of the current time step (need to do this since we zero-padded)
         latent_sample = (
             torch.stack([all_latent_samples[lens[i]][i] for i in range(len(lens))])
-        ).to(device)
+        ).to(self.device)
         latent_mean = (
             torch.stack([all_latent_means[lens[i]][i] for i in range(len(lens))])
-        ).to(device)
+        ).to(self.device)
         latent_logvar = (
             torch.stack([all_latent_logvars[lens[i]][i] for i in range(len(lens))])
-        ).to(device)
+        ).to(self.device)
         hidden_state = (
             torch.stack([all_hidden_states[lens[i]][i] for i in range(len(lens))])
-        ).to(device)
+        ).to(self.device)
 
         return latent_sample, latent_mean, latent_logvar, hidden_state
 

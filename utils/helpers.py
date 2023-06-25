@@ -23,7 +23,9 @@ from torch.nn import functional as F
 import wandb
 from environments.parallel_envs import make_vec_envs
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+def get_device(device_num):
+    return torch.device(f"cuda:{device_num}" if torch.cuda.is_available() else "cpu")
 
 
 # def save_models(args, logger, policy, vae, envs, iter_idx):
@@ -57,6 +59,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def reset_env(env, args, indices=None, state=None):
     """env can be many environments or just one"""
     # reset all environments
+    device = get_device(args.device)
     if (indices is None) or (len(indices) == args.num_processes):
         state = env.reset().float().to(device)
     # reset only the ones given by indices
@@ -89,6 +92,7 @@ def squash_action(action, args):
 def env_step(env, action, args):
     act = squash_action(action.detach(), args)
     next_obs, reward, done, infos = env.step(act)
+    device = get_device(args.device)
 
     if isinstance(next_obs, list):
         next_obs = [o.to(device) for o in next_obs]
@@ -142,6 +146,8 @@ def select_action(
         value, action = action
     else:
         value = None
+
+    device = get_device(args.device)
     action = action.to(device)
     return value, action
 
@@ -270,8 +276,9 @@ def recompute_embeddings(policy_storage, encoder, sample, update_idx, detach_eve
 class FeatureExtractor(nn.Module):
     """Used for extrating features for states/actions/rewards"""
 
-    def __init__(self, input_size, output_size, activation_function):
+    def __init__(self, input_size, output_size, activation_function, device):
         super(FeatureExtractor, self).__init__()
+        self.device = device
         self.output_size = output_size
         self.activation_function = activation_function
         if self.output_size != 0:
@@ -285,7 +292,7 @@ class FeatureExtractor(nn.Module):
         else:
             return torch.zeros(
                 0,
-            ).to(device)
+            ).to(self.device)
 
 
 def sample_gaussian(mu, logvar, num=None):
@@ -312,7 +319,7 @@ def load_obj(folder, name):
 class RunningMeanStd(object):
     # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
     # PyTorch version.
-    def __init__(self, epsilon=1e-4, shape=()):
+    def __init__(self, epsilon=1e-4, shape=(), device: str = "cpu"):
         self.mean = torch.zeros(shape).float().to(device)
         self.var = torch.ones(shape).float().to(device)
         self.count = epsilon
@@ -360,6 +367,7 @@ def boolean_argument(value):
 
 
 def get_task_dim(args):
+    device = get_device(args.device)
     env = make_vec_envs(
         env_name=args.env_name,
         seed=args.seed,
@@ -375,6 +383,7 @@ def get_task_dim(args):
 
 
 def get_num_tasks(args):
+    device = get_device(args.device)
     env = make_vec_envs(
         env_name=args.env_name,
         seed=args.seed,

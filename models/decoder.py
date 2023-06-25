@@ -4,8 +4,6 @@ from torch.nn import functional as F
 
 from utils import helpers as utl
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class StateTransitionDecoder(nn.Module):
     def __init__(
@@ -22,9 +20,14 @@ class StateTransitionDecoder(nn.Module):
         super(StateTransitionDecoder, self).__init__()
 
         self.args = args
+        self.device = utl.get_device(args.device)
 
-        self.state_encoder = utl.FeatureExtractor(state_dim, state_embed_dim, F.relu)
-        self.action_encoder = utl.FeatureExtractor(action_dim, action_embed_dim, F.relu)
+        self.state_encoder = utl.FeatureExtractor(
+            state_dim, state_embed_dim, F.relu, self.device
+        )
+        self.action_encoder = utl.FeatureExtractor(
+            action_dim, action_embed_dim, F.relu, self.device
+        )
 
         curr_input_dim = latent_dim + state_embed_dim + action_embed_dim
         self.fc_layers = nn.ModuleList([])
@@ -39,7 +42,6 @@ class StateTransitionDecoder(nn.Module):
             self.fc_out = nn.Linear(curr_input_dim, state_dim)
 
     def forward(self, latent_state, state, actions):
-
         # we do the action-normalisation (the the env bounds) here
         actions = utl.squash_action(actions, self.args)
 
@@ -89,11 +91,11 @@ class RewardDecoder(nn.Module):
         else:
             # get state as input and predict reward prob
             self.state_encoder = utl.FeatureExtractor(
-                state_dim, state_embed_dim, F.relu
+                state_dim, state_embed_dim, F.relu, self.device
             )
             if self.input_action:
                 self.action_encoder = utl.FeatureExtractor(
-                    action_dim, action_embed_dim, F.relu
+                    action_dim, action_embed_dim, F.relu, self.device
                 )
             else:
                 self.action_encoder = None
@@ -113,7 +115,6 @@ class RewardDecoder(nn.Module):
                 self.fc_out = nn.Linear(curr_input_dim, 1)
 
     def forward(self, latent_state, next_state, prev_state=None, actions=None):
-
         # we do the action-normalisation (the the env bounds) here
         if actions is not None:
             actions = utl.squash_action(actions, self.args)
@@ -160,7 +161,6 @@ class TaskDecoder(nn.Module):
         self.fc_out = nn.Linear(curr_input_dim, output_dim)
 
     def forward(self, latent_state):
-
         h = latent_state
 
         for i in range(len(self.fc_layers)):

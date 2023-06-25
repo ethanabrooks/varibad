@@ -5,8 +5,6 @@ from torch.nn import functional as F
 
 from utils import helpers as utl
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class RNNEncoder(nn.Module):
     def __init__(
@@ -27,16 +25,21 @@ class RNNEncoder(nn.Module):
     ):
         super(RNNEncoder, self).__init__()
 
+        self.device = utl.get_device(args.device)
         self.args = args
         self.latent_dim = latent_dim
         self.hidden_size = hidden_size
         self.reparameterise = self._sample_gaussian
 
         # embed action, state, reward
-        self.state_encoder = utl.FeatureExtractor(state_dim, state_embed_dim, F.relu)
-        self.action_encoder = utl.FeatureExtractor(action_dim, action_embed_dim, F.relu)
+        self.state_encoder = utl.FeatureExtractor(
+            state_dim, state_embed_dim, F.relu, self.device
+        )
+        self.action_encoder = utl.FeatureExtractor(
+            action_dim, action_embed_dim, F.relu, self.device
+        )
         self.reward_encoder = utl.FeatureExtractor(
-            reward_size, reward_embed_size, F.relu
+            reward_size, reward_embed_size, F.relu, self.device
         )
 
         # fully connected layers before the recurrent cell
@@ -94,13 +97,12 @@ class RNNEncoder(nn.Module):
         return hidden_state
 
     def prior(self, batch_size, sample=True):
-
         # TODO: add option to incorporate the initial state
 
         # we start out with a hidden state of zero
         hidden_state = torch.zeros(
             (1, batch_size, self.hidden_size), requires_grad=True
-        ).to(device)
+        ).to(self.device)
 
         h = hidden_state
         # forward through fully connected layers after GRU

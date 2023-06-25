@@ -8,10 +8,8 @@ from torch.nn import functional as F
 
 from models.decoder import RewardDecoder, StateTransitionDecoder, TaskDecoder
 from models.encoder import RNNEncoder
-from utils.helpers import get_num_tasks, get_task_dim
+from utils.helpers import get_device, get_num_tasks, get_task_dim
 from utils.storage_vae import RolloutStorageVAE
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class VaribadVAE:
@@ -23,8 +21,8 @@ class VaribadVAE:
     """
 
     def __init__(self, args, logger, get_iter_idx):
-
         self.args = args
+        self.device = get_device(args.device)
         self.logger = logger
         self.get_iter_idx = get_iter_idx
         self.task_dim = get_task_dim(self.args) if self.args.decode_task else None
@@ -51,6 +49,7 @@ class VaribadVAE:
             action_dim=self.args.action_dim,
             vae_buffer_add_thresh=self.args.vae_buffer_add_thresh,
             task_dim=self.task_dim,
+            device=self.device,
         )
 
         # initalise optimiser for the encoder and decoders
@@ -80,7 +79,7 @@ class VaribadVAE:
             state_embed_dim=self.args.state_embedding_size,
             reward_size=1,
             reward_embed_size=self.args.reward_embedding_size,
-        ).to(device)
+        ).to(self.device)
         return encoder
 
     def initialise_decoder(self):
@@ -105,7 +104,7 @@ class VaribadVAE:
                 state_dim=self.args.state_dim,
                 state_embed_dim=self.args.state_embedding_size,
                 pred_type=self.args.state_pred_type,
-            ).to(device)
+            ).to(self.device)
         else:
             state_decoder = None
 
@@ -124,7 +123,7 @@ class VaribadVAE:
                 pred_type=self.args.rew_pred_type,
                 input_prev_state=self.args.input_prev_state,
                 input_action=self.args.input_action,
-            ).to(device)
+            ).to(self.device)
         else:
             reward_decoder = None
 
@@ -137,7 +136,7 @@ class VaribadVAE:
                 task_dim=self.task_dim,
                 num_tasks=self.num_tasks,
                 pred_type=self.args.task_pred_type,
-            ).to(device)
+            ).to(self.device)
         else:
             task_decoder = None
 
@@ -147,7 +146,8 @@ class VaribadVAE:
         self, latent, prev_obs, next_obs, action, return_predictions=False
     ):
         """Compute state reconstruction loss.
-        (No reduction of loss along batch dimension is done here; sum/avg has to be done outside)"""
+        (No reduction of loss along batch dimension is done here; sum/avg has to be done outside)
+        """
 
         state_pred = self.state_decoder(latent, prev_obs, action)
 
@@ -170,7 +170,8 @@ class VaribadVAE:
         self, latent, prev_obs, next_obs, action, reward, return_predictions=False
     ):
         """Compute reward reconstruction loss.
-        (No reduction of loss along batch dimension is done here; sum/avg has to be done outside)"""
+        (No reduction of loss along batch dimension is done here; sum/avg has to be done outside)
+        """
 
         if self.args.multihead_for_reward:
             rew_pred = self.reward_decoder(latent, None)
@@ -180,7 +181,7 @@ class VaribadVAE:
                 rew_pred = torch.sigmoid(rew_pred)
 
             env = gym.make(self.args.env_name)
-            state_indices = env.task_to_id(next_obs).to(device)
+            state_indices = env.task_to_id(next_obs).to(self.device)
             if state_indices.dim() < rew_pred.dim():
                 state_indices = state_indices.unsqueeze(-1)
             rew_pred = rew_pred.gather(dim=-1, index=state_indices)
@@ -213,13 +214,14 @@ class VaribadVAE:
 
     def compute_task_reconstruction_loss(self, latent, task, return_predictions=False):
         """Compute task reconstruction loss.
-        (No reduction of loss along batch dimension is done here; sum/avg has to be done outside)"""
+        (No reduction of loss along batch dimension is done here; sum/avg has to be done outside)
+        """
 
         task_pred = self.task_decoder(latent)
 
         if self.args.task_pred_type == "task_id":
             env = gym.make(self.args.env_name)
-            task_target = env.task_to_id(task).to(device)
+            task_target = env.task_to_id(task).to(self.device)
             # expand along first axis (number of ELBO terms)
             task_target = task_target.expand(task_pred.shape[:-1]).reshape(-1)
             loss_task = F.cross_entropy(
@@ -245,10 +247,13 @@ class VaribadVAE:
             gauss_dim = latent_mean.shape[-1]
             # add the gaussian prior
             all_means = torch.cat(
-                (torch.zeros(1, *latent_mean.shape[1:]).to(device), latent_mean)
+                (torch.zeros(1, *latent_mean.shape[1:]).to(self.device), latent_mean)
             )
             all_logvars = torch.cat(
-                (torch.zeros(1, *latent_logvar.shape[1:]).to(device), latent_logvar)
+                (
+                    torch.zeros(1, *latent_logvar.shape[1:]).to(self.device),
+                    latent_logvar,
+                )
             )
             # https://arxiv.org/pdf/1811.09975.pdf
             # KL(N(mu,E)||N(m,S)) = 0.5 * (log(|S|/|E|) - K + tr(S^-1 E) + (m-mu)^T S^-1 (m-mu)))
@@ -505,7 +510,6 @@ class VaribadVAE:
         vae_tasks,
         trajectory_lens,
     ):
-
         """
         Loop over the elvo_t terms to compute losses per t.
         Saves some memory if batch sizes are very large,
@@ -522,7 +526,6 @@ class VaribadVAE:
 
         # for each elbo term (including one for the prior)...
         for idx_elbo in range(n_elbos):
-
             # get the embedding values (size: traj_length+1 * latent_dim; the +1 is for the prior)
             curr_means = latent_mean[idx_elbo]
             curr_logvars = latent_logvar[idx_elbo]
@@ -535,7 +538,6 @@ class VaribadVAE:
 
             # if the size of what we decode is always the same, we can speed up creating the batches
             if not self.args.decode_only_past:
-
                 # expand the latent to match the (x, y) pairs of the decoder
                 dec_embedding = curr_samples.unsqueeze(0).expand(
                     (n_horizon, *curr_samples.shape)
@@ -551,7 +553,6 @@ class VaribadVAE:
             # loop through the lengths we are feeding into the encoder for that trajectory (starting with prior)
             # (these are the different ELBO_t terms)
             else:
-
                 # get the index until which we want to decode
                 # (i.e. eithe runtil curr timestep or entire trajectory including future)
                 if self.args.decode_only_past:
@@ -670,17 +671,6 @@ class VaribadVAE:
 
         if self.args.split_batches_by_task:
             raise NotImplementedError
-            losses = self.compute_loss_split_batches_by_task(
-                latent_mean,
-                latent_logvar,
-                vae_prev_obs,
-                vae_next_obs,
-                vae_actions,
-                vae_rewards,
-                vae_tasks,
-                trajectory_lens,
-                len_encoder,
-            )
         elif self.args.split_batches_by_elbo:
             losses = self.compute_loss_split_batches_by_elbo(
                 latent_mean,
@@ -777,7 +767,6 @@ class VaribadVAE:
         kl_loss,
         pretrain_index=None,
     ):
-
         if pretrain_index is None:
             curr_iter_idx = self.get_iter_idx()
         else:
@@ -787,7 +776,6 @@ class VaribadVAE:
             )
 
         if curr_iter_idx % self.args.log_interval == 0:
-
             if self.args.decode_reward:
                 self.logger.add(
                     "vae_losses/reward_reconstr_err",

@@ -7,8 +7,6 @@ import torch
 from environments.mujoco.mujoco_env import MujocoEnv
 from utils import helpers as utl
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class AntEnv(MujocoEnv):
     def __init__(self, use_low_gear_ratio=False):
@@ -137,6 +135,7 @@ class AntEnv(MujocoEnv):
         return_pos=False,
         **kwargs,
     ):
+        device = utl.get_device(args.device)
         num_episodes = args.max_rollouts_per_task
         if num_episodes is None:
             num_episodes = 1

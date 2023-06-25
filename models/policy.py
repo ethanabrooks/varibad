@@ -28,8 +28,6 @@ except ImportError:
     )
     pass
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class Policy(nn.Module):
     def __init__(
@@ -61,6 +59,7 @@ class Policy(nn.Module):
         super(Policy, self).__init__()
 
         self.args = args
+        self.device = utl.get_device(args.device)
 
         if activation_function == "tanh":
             self.activation_function = nn.Tanh()
@@ -95,16 +94,16 @@ class Policy(nn.Module):
         # (will be updated from outside using the RL batches)
         self.norm_state = self.args.norm_state_for_policy and (dim_state is not None)
         if self.pass_state_to_policy and self.norm_state:
-            self.state_rms = utl.RunningMeanStd(shape=(dim_state))
+            self.state_rms = utl.RunningMeanStd(shape=(dim_state), device=self.device)
         self.norm_latent = self.args.norm_latent_for_policy and (dim_latent is not None)
         if self.pass_latent_to_policy and self.norm_latent:
-            self.latent_rms = utl.RunningMeanStd(shape=(dim_latent))
+            self.latent_rms = utl.RunningMeanStd(shape=(dim_latent), device=self.device)
         self.norm_belief = self.args.norm_belief_for_policy and (dim_belief is not None)
         if self.pass_belief_to_policy and self.norm_belief:
-            self.belief_rms = utl.RunningMeanStd(shape=(dim_belief))
+            self.belief_rms = utl.RunningMeanStd(shape=(dim_belief), device=self.device)
         self.norm_task = self.args.norm_task_for_policy and (dim_task is not None)
         if self.pass_task_to_policy and self.norm_task:
-            self.task_rms = utl.RunningMeanStd(shape=(dim_task))
+            self.task_rms = utl.RunningMeanStd(shape=(dim_task), device=self.device)
 
         curr_input_dim = (
             dim_state * int(self.pass_state_to_policy)
@@ -119,6 +118,7 @@ class Policy(nn.Module):
                 dim_state,
                 self.args.policy_state_embedding_dim,
                 self.activation_function,
+                self.device,
             )
             curr_input_dim = (
                 curr_input_dim - dim_state + self.args.policy_state_embedding_dim
@@ -129,6 +129,7 @@ class Policy(nn.Module):
                 dim_latent,
                 self.args.policy_latent_embedding_dim,
                 self.activation_function,
+                self.device,
             )
             curr_input_dim = (
                 curr_input_dim - dim_latent + self.args.policy_latent_embedding_dim
@@ -139,6 +140,7 @@ class Policy(nn.Module):
                 dim_belief,
                 self.args.policy_belief_embedding_dim,
                 self.activation_function,
+                self.device,
             )
             curr_input_dim = (
                 curr_input_dim - dim_belief + self.args.policy_belief_embedding_dim
@@ -146,7 +148,10 @@ class Policy(nn.Module):
         self.use_task_encoder = self.args.policy_task_embedding_dim is not None
         if self.pass_task_to_policy and self.use_task_encoder:
             self.task_encoder = utl.FeatureExtractor(
-                dim_task, self.args.policy_task_embedding_dim, self.activation_function
+                dim_task,
+                self.args.policy_task_embedding_dim,
+                self.activation_function,
+                self.device,
             )
             curr_input_dim = (
                 curr_input_dim - dim_task + self.args.policy_task_embedding_dim
@@ -175,6 +180,7 @@ class Policy(nn.Module):
                 num_outputs,
                 init_std,
                 self.args.norm_actions_pre_sampling,
+                self.device,
             )
         else:
             raise NotImplementedError
@@ -212,7 +218,7 @@ class Policy(nn.Module):
         else:
             state = torch.zeros(
                 0,
-            ).to(device)
+            ).to(self.device)
         if self.pass_latent_to_policy:
             if self.norm_latent:
                 latent = (latent - self.latent_rms.mean) / torch.sqrt(
@@ -223,7 +229,7 @@ class Policy(nn.Module):
         else:
             latent = torch.zeros(
                 0,
-            ).to(device)
+            ).to(self.device)
         if self.pass_belief_to_policy:
             if self.norm_belief:
                 belief = (belief - self.belief_rms.mean) / torch.sqrt(
@@ -234,7 +240,7 @@ class Policy(nn.Module):
         else:
             belief = torch.zeros(
                 0,
-            ).to(device)
+            ).to(self.device)
         if self.pass_task_to_policy:
             if self.norm_task:
                 task = (task - self.task_rms.mean) / torch.sqrt(
@@ -245,7 +251,7 @@ class Policy(nn.Module):
         else:
             task = torch.zeros(
                 0,
-            ).to(device)
+            ).to(self.device)
 
         # concatenate inputs
         inputs = torch.cat((state.squeeze(0), latent, belief, task), dim=-1)
@@ -366,15 +372,18 @@ class Categorical(nn.Module):
 
 
 class DiagGaussian(nn.Module):
-    def __init__(self, num_inputs, num_outputs, init_std, norm_actions_pre_sampling):
+    def __init__(
+        self, num_inputs, num_outputs, init_std, norm_actions_pre_sampling, device
+    ):
         super(DiagGaussian, self).__init__()
+        self.device = device
 
         init_ = lambda m: init(m, init_normc_, lambda x: nn.init.constant_(x, 0))
 
         self.fc_mean = init_(nn.Linear(num_inputs, num_outputs))
         self.logstd = nn.Parameter(np.log(torch.zeros(num_outputs) + init_std))
         self.norm_actions_pre_sampling = norm_actions_pre_sampling
-        self.min_std = torch.tensor([1e-6]).to(device)
+        self.min_std = torch.tensor([1e-6]).to(self.device)
 
     def forward(self, x):
         action_mean = self.fc_mean(x)

@@ -10,8 +10,6 @@ from environments.parallel_envs import make_vec_envs
 from utils import helpers as utl
 from utils.tb_logger import TBLogger
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 def evaluate(
     args,
@@ -24,6 +22,7 @@ def evaluate(
     encoder=None,
     num_episodes=None,
 ):
+    device = utl.get_device(args.device)
     env_name = args.env_name
     if hasattr(args, "test_env_name"):
         env_name = args.test_env_name
@@ -166,6 +165,7 @@ def visualise_behaviour(
     compute_state_reconstruction_loss=None,
     compute_kl_loss=None,
 ):
+    device = torch.device(f"cuda:{args.device}" if torch.cuda.is_available() else "cpu")
     # initialise environment
     env = make_vec_envs(
         env_name=args.env_name,
@@ -243,6 +243,7 @@ def visualise_behaviour(
 
 
 def get_test_rollout(args, env, policy, encoder=None):
+    device = torch.device(f"cuda:{args.device}" if torch.cuda.is_available() else "cpu")
     num_episodes = args.max_rollouts_per_task
     if num_episodes is None:
         num_episodes = 1
@@ -448,6 +449,7 @@ def plot_vae_loss(
     compute_state_reconstruction_loss,
     compute_kl_loss,
 ):
+    device = torch.device(f"cuda:{args.device}" if torch.cuda.is_available() else "cpu")
     num_rollouts = len(latent_means)
     num_episode_steps = len(latent_means[0])
     if not args.disable_stochasticity_in_latent:

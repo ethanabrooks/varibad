@@ -8,8 +8,6 @@ from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 
 from utils import helpers as utl
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 def _flatten_helper(T, N, _tensor):
     return _tensor.reshape(T * N, *_tensor.size()[2:])
@@ -29,8 +27,8 @@ class OnlineStorage(object):
         latent_dim,
         normalise_rewards,
     ):
-
         self.args = args
+        self.device = utl.get_device(args.device)
         self.state_dim = state_dim
         self.belief_dim = belief_dim
         self.task_dim = task_dim
@@ -98,25 +96,25 @@ class OnlineStorage(object):
 
     def to_device(self):
         if self.args.pass_state_to_policy:
-            self.prev_state = self.prev_state.to(device)
+            self.prev_state = self.prev_state.to(self.device)
         if self.args.pass_latent_to_policy:
-            self.latent_samples = [t.to(device) for t in self.latent_samples]
-            self.latent_mean = [t.to(device) for t in self.latent_mean]
-            self.latent_logvar = [t.to(device) for t in self.latent_logvar]
-            self.hidden_states = self.hidden_states.to(device)
-            self.next_state = self.next_state.to(device)
+            self.latent_samples = [t.to(self.device) for t in self.latent_samples]
+            self.latent_mean = [t.to(self.device) for t in self.latent_mean]
+            self.latent_logvar = [t.to(self.device) for t in self.latent_logvar]
+            self.hidden_states = self.hidden_states.to(self.device)
+            self.next_state = self.next_state.to(self.device)
         if self.args.pass_belief_to_policy:
-            self.beliefs = self.beliefs.to(device)
+            self.beliefs = self.beliefs.to(self.device)
         if self.args.pass_task_to_policy:
-            self.tasks = self.tasks.to(device)
-        self.rewards_raw = self.rewards_raw.to(device)
-        self.rewards_normalised = self.rewards_normalised.to(device)
-        self.done = self.done.to(device)
-        self.masks = self.masks.to(device)
-        self.bad_masks = self.bad_masks.to(device)
-        self.value_preds = self.value_preds.to(device)
-        self.returns = self.returns.to(device)
-        self.actions = self.actions.to(device)
+            self.tasks = self.tasks.to(self.device)
+        self.rewards_raw = self.rewards_raw.to(self.device)
+        self.rewards_normalised = self.rewards_normalised.to(self.device)
+        self.done = self.done.to(self.device)
+        self.masks = self.masks.to(self.device)
+        self.bad_masks = self.bad_masks.to(self.device)
+        self.value_preds = self.value_preds.to(self.device)
+        self.returns = self.returns.to(self.device)
+        self.actions = self.actions.to(self.device)
 
     def insert(
         self,
@@ -177,7 +175,6 @@ class OnlineStorage(object):
     def compute_returns(
         self, next_value, use_gae, gamma, tau, use_proper_time_limits=True
     ):
-
         if self.normalise_rewards:
             rewards = self.rewards_normalised.clone()
         else:
@@ -205,7 +202,6 @@ class OnlineStorage(object):
         use_gae,
         use_proper_time_limits,
     ):
-
         if use_proper_time_limits:
             if use_gae:
                 value_preds[-1] = next_value
@@ -293,7 +289,6 @@ class OnlineStorage(object):
             SubsetRandomSampler(range(batch_size)), mini_batch_size, drop_last=True
         )
         for indices in sampler:
-
             if self.args.pass_state_to_policy:
                 state_batch = self.prev_state[:-1].reshape(
                     -1, *self.prev_state.size()[2:]

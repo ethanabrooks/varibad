@@ -5,8 +5,6 @@ from gym.envs.mujoco import HalfCheetahEnv as HalfCheetahEnv_
 
 from utils import helpers as utl
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class HalfCheetahEnv(HalfCheetahEnv_):
     def _get_obs(self):
@@ -51,7 +49,7 @@ class HalfCheetahEnv(HalfCheetahEnv_):
         return_pos=False,
         **kwargs,
     ):
-
+        device = utl.get_device(args.device)
         num_episodes = args.max_rollouts_per_task
         if num_episodes is None:
             num_episodes = 1
@@ -96,7 +94,6 @@ class HalfCheetahEnv(HalfCheetahEnv_):
         start_pos = unwrapped_env.get_body_com("torso")[0].copy()
 
         for episode_idx in range(num_episodes):
-
             curr_rollout_rew = []
             pos[episode_idx].append(start_pos)
 
@@ -121,7 +118,6 @@ class HalfCheetahEnv(HalfCheetahEnv_):
                 )
 
             for step_idx in range(1, env._max_episode_steps + 1):
-
                 if step_idx == 1:
                     episode_prev_obs[episode_idx].append(start_state.clone())
                 else:

@@ -1,12 +1,11 @@
 import numpy as np
 import torch
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class RolloutStorageVAE(object):
     def __init__(
         self,
+        device,
         num_processes,
         max_trajectory_len,
         zero_pad,
@@ -98,7 +97,6 @@ class RolloutStorageVAE(object):
         )
 
     def insert(self, prev_state, actions, next_state, rewards, done, task):
-
         # add to temporary buffer
 
         already_inserted = False
@@ -116,7 +114,6 @@ class RolloutStorageVAE(object):
         if (
             done.sum() == self.num_processes
         ):  # check if we can process the entire batch at once
-
             # add to permanent (up to max_buffer_len) buffer
             if self.max_buffer_size > 0:
                 if self.vae_buffer_add_thresh >= np.random.uniform(0, 1):
@@ -167,9 +164,7 @@ class RolloutStorageVAE(object):
             already_reset = True
 
         if (not already_inserted) or (not already_reset):
-
             for i in range(self.num_processes):
-
                 if not already_inserted:
                     self.running_prev_state[self.curr_timestep[i], i] = prev_state[i]
                     self.running_next_state[self.curr_timestep[i], i] = next_state[i]
@@ -182,7 +177,6 @@ class RolloutStorageVAE(object):
                 if not already_reset:
                     # if we are at the end of a task, dump the data into the larger buffer
                     if done[i]:
-
                         # add to permanent (up to max_buffer_len) buffer
                         if self.max_buffer_size > 0:
                             if self.vae_buffer_add_thresh >= np.random.uniform(0, 1):
@@ -253,15 +247,15 @@ class RolloutStorageVAE(object):
         actions = self.actions[:, rollout_indices, :]
         rewards = self.rewards[:, rollout_indices, :]
         if self.tasks is not None:
-            tasks = self.tasks[rollout_indices].to(device)
+            tasks = self.tasks[rollout_indices].to(self.device)
         else:
             tasks = None
 
         return (
-            prev_obs.to(device),
-            next_obs.to(device),
-            actions.to(device),
-            rewards.to(device),
+            prev_obs.to(self.device),
+            next_obs.to(self.device),
+            actions.to(self.device),
+            rewards.to(self.device),
             tasks,
             trajectory_lens,
         )
