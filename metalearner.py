@@ -9,7 +9,7 @@ import wandb
 from algorithms.a2c import A2C
 from algorithms.online_storage import OnlineStorage
 from algorithms.ppo import PPO
-from environments.parallel_envs import make_env, make_vec_envs
+from environments.parallel_envs import make_vec_envs
 from models.policy import Policy
 from utils import evaluation as utl_eval
 from utils import helpers as utl
@@ -40,30 +40,6 @@ class MetaLearner:
         # initialise tensorboard logger
         self.logger = TBLogger(self.args, self.args.exp_label)
 
-        def generate_tasks(train: bool):
-            env_thunk = make_env(
-                args.env_name,
-                seed=args.seed,
-                rank=0,
-                episodes_per_task=args.max_rollouts_per_task,
-                tasks=None,
-                add_done_info=None,
-            )
-            env = env_thunk()
-            while True:
-                task = env.sample_task()
-                is_test = env.test_task_mask(task[None]).item()
-                if (train and not is_test) or (not train and is_test):
-                    yield task
-
-        tasks = (
-            None
-            if args.num_train_tasks is None
-            else np.stack(
-                list(itertools.islice(generate_tasks(train=True), args.num_train_tasks))
-            )
-        )
-
         # initialise environments
         self.envs = make_vec_envs(
             env_name=args.env_name,
@@ -75,7 +51,7 @@ class MetaLearner:
             normalise_rew=args.norm_rew_for_policy,
             ret_rms=None,
             store_rollouts=args.store_rollouts,
-            tasks=tasks,
+            tasks=None,
             test_threshold=args.test_threshold,
         )
 
@@ -101,17 +77,7 @@ class MetaLearner:
             # save the training tasks so we can evaluate on the same envs later
             utl.save_obj(self.test_tasks, self.logger.full_output_folder, "test_tasks")
         else:
-            self.test_tasks = (
-                None
-                if args.num_test_tasks is None
-                else np.stack(
-                    list(
-                        itertools.islice(
-                            generate_tasks(train=False), args.num_test_tasks
-                        )
-                    )
-                )
-            )
+            self.test_tasks = None
 
         # calculate what the maximum length of the trajectories is
         self.args.max_trajectory_len = self.envs._max_episode_steps
