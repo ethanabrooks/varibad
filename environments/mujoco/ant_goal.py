@@ -36,6 +36,7 @@ class AntGoalEnv(AntEnv):
             0.5 * 1e-3 * np.sum(np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)))
         )
         survive_reward = 1.0
+        distance_traveled = np.linalg.norm(torso_xyz_before)
         reward = forward_reward - ctrl_cost - contact_cost + survive_reward
         state = self.state_vector()
         notdone = np.isfinite(state).all() and state[2] >= 0.2 and state[2] <= 1.0
@@ -46,6 +47,7 @@ class AntGoalEnv(AntEnv):
             reward,
             done,
             dict(
+                distance_traveled=distance_traveled,
                 reward_forward=forward_reward,
                 reward_ctrl=-ctrl_cost,
                 reward_contact=-contact_cost,
