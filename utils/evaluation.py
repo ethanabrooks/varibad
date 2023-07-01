@@ -1,4 +1,6 @@
 from collections import defaultdict
+import os
+import time
 import numbers
 from typing import Optional
 import matplotlib.pyplot as plt
@@ -22,6 +24,7 @@ def evaluate(
     test_threshold: Optional[float] = None,
     encoder=None,
     num_episodes=None,
+    visualize: bool = False,
 ):
     env_name = args.env_name
     if hasattr(args, "test_env_name"):
@@ -74,7 +77,7 @@ def evaluate(
         latent_sample = latent_mean = latent_logvar = hidden_state = None
 
     t = -1
-    for _ in range(num_episodes):
+    for ep in range(num_episodes):
         episode_return = 0
         for _ in range(num_steps):
             t += 1
@@ -136,6 +139,17 @@ def evaluate(
                 task_count[i] = min(
                     task_count[i] + 1, num_episodes
                 )  # zero-indexed, so no +1
+                if visualize:
+                    image_path = os.path.join(
+                        logger.full_output_folder, f"behavior-ep{ep}"
+                    )
+                    path = envs.plot(i, image_path=image_path)
+                    sleep = 0.1
+                    while not os.path.exists(path):
+                        # print(f"Waiting {sleep} seconds for {path} to be created...")
+                        time.sleep(sleep)
+                        sleep *= 2
+                    logger.save_png(ep, path=path)
             if np.sum(done) > 0:
                 done_indices = np.argwhere(done.flatten()).flatten()
                 state, belief, task = utl.reset_env(

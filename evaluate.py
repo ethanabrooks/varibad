@@ -86,6 +86,7 @@ def evaluate(args):
             logger=logger,
             encoder=metalearner.vae.encoder,
             num_episodes=args.num_episodes,
+            visualize=True,
             test_threshold=args.test_threshold,
         )
     wandb.finish()
