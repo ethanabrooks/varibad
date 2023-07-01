@@ -23,7 +23,7 @@ def load_pickle(loadpath: Path):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--loadpath")
-    parser.add_argument("--num_episodes", type=int)
+    parser.add_argument("--num-episodes", type=int)
     parser.add_argument("--test-threshold", type=float)
     args, rest_args = parser.parse_known_args()
     loadpath = args.loadpath
