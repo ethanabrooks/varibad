@@ -2,6 +2,7 @@ import random
 from typing import Optional
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from environments.mujoco.ant import AntEnv
 
@@ -86,6 +87,13 @@ class AntDir2DEnv(AntDirEnv):
             if self.test_threshold
             else (np.random.random(n_tasks) * np.pi)
         )
+
+    def plot_task(curr_task: np.ndarray):
+        [angle] = curr_task
+        length = 1.0  # Length of the line
+        x = np.array([0, length * np.cos(angle)])
+        y = np.array([0, length * np.sin(angle)])
+        plt.plot(x, y, "-")
 
 
 class AntDirOracleEnv(AntDirEnv):

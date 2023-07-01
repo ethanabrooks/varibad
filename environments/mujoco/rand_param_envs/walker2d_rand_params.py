@@ -1,4 +1,5 @@
 from typing import Optional
+import matplotlib.pyplot as plt
 
 import numpy as np
 
@@ -24,7 +25,7 @@ class Walker2DRandParamsEnv(RandomEnv, utils.EzPickle):
         done = not (height > 0.8 and height < 2.0 and ang > -1.0 and ang < 1.0)
         ob = self._get_obs()
         self._elapsed_steps += 1
-        info = {"task": self.get_task()}
+        info = {"task": self.get_task(), "posbefore": posbefore, "posafter": posafter}
         if self._elapsed_steps == self._max_episode_steps:
             done = True
             info["bad_transition"] = True
@@ -54,3 +55,42 @@ class Walker2DRandParamsEnv(RandomEnv, utils.EzPickle):
         self.viewer.cam.distance = self.model.stat.extent * 0.5
         self.viewer.cam.lookat[2] += 0.8
         self.viewer.cam.elevation = -20
+
+    @classmethod
+    def plot(
+        cls,
+        rollouts: np.ndarray,
+        curr_task: np.ndarray,
+        num_episodes: int = 1,
+        image_path: Optional[str] = None,
+    ):
+        # plot the movement of the ant
+        # print(pos)
+        fig = plt.figure(figsize=(5, 4 * num_episodes))
+        min_dim = -3.5
+        max_dim = 3.5
+        span = max_dim - min_dim
+
+        for i in range(num_episodes):
+            plt.subplot(num_episodes, 1, i + 1)
+
+            x = np.array([i["posbefore"] for _, _, _, _, i in rollouts[i]])
+            plt.plot(x, "bo")
+
+            plt.ylabel("position (ep {})".format(i), fontsize=15)
+
+            if i == num_episodes - 1:
+                plt.xlabel("time", fontsize=15)
+                plt.ylabel("position (ep {})".format(i), fontsize=15)
+            plt.xlim(min_dim - 0.05 * span, max_dim + 0.05 * span)
+            plt.ylim(min_dim - 0.05 * span, max_dim + 0.05 * span)
+
+        plt.tight_layout()
+        if image_path is not None:
+            # print(f"Saving plot to {image_path}")
+            plt.savefig(image_path)
+            plt.close()
+        else:
+            plt.show()
+
+        return fig
