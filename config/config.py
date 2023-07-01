@@ -289,7 +289,7 @@ class AntGoalMultitask(Multitask, AntGoal):
 
 @dataclass
 class AntGoalAD(AD, AntGoalMultitask):
-    pass
+    num_frames: int = 30_000_000
 
 
 @dataclass
