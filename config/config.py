@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
 import os
+from dataclasses import dataclass, field
 from typing import Optional
 
 
@@ -254,7 +254,7 @@ class AntDirMultitask(Multitask, AntDir):
 
 @dataclass
 class AntDirAD(AD, AntDirMultitask):
-    pass
+    num_frames: int = 40_000_000
 
 
 @dataclass
