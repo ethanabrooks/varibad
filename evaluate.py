@@ -3,6 +3,7 @@ import wandb
 import os
 import pickle
 from pathlib import Path
+import json
 
 import torch
 import torch.nn as nn
@@ -41,11 +42,20 @@ def main():
 
 def evaluate(args):
     if not args.debug:
+        config = {}
+        for k, v in vars(args).items():
+            try:
+                json.dumps(v)
+            except TypeError:
+                continue
+            config[k] = v
         wandb.init(
-            project="In-Context Model-Based Planning",
             name=f"evaluate-{args.env_name}-{args.exp_label}",
-            sync_tensorboard=True,
+            config=config,
             notes=args.notes,
+            project=utl.get_project_name(),
+            sync_tensorboard=True,
+            tags=utl.get_tags(args.max_rollouts_per_task),
         )
 
     seeds = args.seed
