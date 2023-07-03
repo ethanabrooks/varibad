@@ -100,7 +100,7 @@ def evaluate(
                 (rew_raw, rew_normalised),
                 done,
                 infos,
-            ) = utl.env_step(envs, action, args)
+            ) = utl.env_step(envs, action.squeeze(0), args)
             if logger is not None:
                 logger.add("reward", rew_raw.mean(), t)
 

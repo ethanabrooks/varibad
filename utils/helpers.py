@@ -164,9 +164,6 @@ def get_latent_for_policy(
     else:
         latent = torch.cat((latent_mean, latent_logvar), dim=-1)
 
-    if latent.shape[0] == 1:
-        latent = latent.squeeze(0)
-
     return latent
 
 
