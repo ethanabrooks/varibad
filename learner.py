@@ -71,6 +71,7 @@ class Learner:
             episodes_per_task=self.args.max_rollouts_per_task,
             normalise_rew=args.norm_rew_for_policy,
             ret_rms=None,
+            store_rollouts=False,
             tasks=None,
         )
         print("✓")

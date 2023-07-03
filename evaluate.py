@@ -61,6 +61,7 @@ def evaluate(args):
     seeds = args.seed
     if not isinstance(seeds, list):
         seeds = [seeds]
+    args.store_rollouts = True
     for seed in seeds:
         args.seed = seed
         metalearner = MetaLearner(args)

@@ -75,6 +75,7 @@ class MetaLearner:
             normalise_rew=args.norm_rew_for_policy,
             ret_rms=None,
             tasks=tasks,
+            store_rollouts=args.store_rollouts,
         )
 
         if self.args.single_task_mode:

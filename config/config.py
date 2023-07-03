@@ -17,6 +17,7 @@ class Args:
     single_task_mode: bool = (
         False  # train policy on one (randomly chosen environment only)
     )
+    store_rollouts: bool = False  # store rollouts in env
     test_threshold: Optional[float] = None  # parameter for setting test env
 
     # --- POLICY ---

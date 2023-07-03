@@ -55,6 +55,7 @@ def evaluate(
         tasks=tasks,
         add_done_info=num_episodes > 1,
         test_threshold=test_threshold,
+        store_rollouts=args.store_rollouts,
     )
     num_steps = envs._max_episode_steps
 
@@ -178,6 +179,7 @@ def visualise_behaviour(
         rank_offset=args.num_processes
         + 42,  # not sure if the temp folders would otherwise clash
         tasks=tasks,
+        store_rollouts=args.store_rollouts,
     )
     episode_task = torch.from_numpy(np.array(env.get_task())).to(device).float()
 
