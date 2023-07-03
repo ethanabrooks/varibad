@@ -75,15 +75,13 @@ class Walker2DRandParamsEnv(RandomEnv, utils.EzPickle):
             plt.subplot(num_episodes, 1, i + 1)
 
             x = np.array([i["posbefore"] for _, _, _, _, i in rollouts[i]])
-            plt.plot(x, "bo")
+            plt.plot(x)
 
             plt.ylabel("position (ep {})".format(i), fontsize=15)
 
             if i == num_episodes - 1:
                 plt.xlabel("time", fontsize=15)
                 plt.ylabel("position (ep {})".format(i), fontsize=15)
-            plt.xlim(min_dim - 0.05 * span, max_dim + 0.05 * span)
-            plt.ylim(min_dim - 0.05 * span, max_dim + 0.05 * span)
 
         plt.tight_layout()
         if image_path is not None:
