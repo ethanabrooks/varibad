@@ -19,6 +19,7 @@ import torch.nn as nn
 from ray import tune
 from ray.air.integrations.wandb import setup_wandb
 from torch.nn import functional as F
+from rich.console import Console
 
 import wandb
 from environments.parallel_envs import make_vec_envs
@@ -53,6 +54,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #         obs_rms = envs.venv.obs_rms
 #         save_obj(obs_rms, save_path, "env_obs_rms{0}.pkl".format(iter_idx))
 
+console = Console()
 
 def reset_env(env, args, indices=None, state=None):
     """env can be many environments or just one"""
