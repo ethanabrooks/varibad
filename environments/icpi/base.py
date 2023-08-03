@@ -154,6 +154,9 @@ class Env(gym.Env, Generic[ObsType, ActType], abc.ABC):
     def transition_stop(self) -> str:
         return "done" + self.done_stop()
 
+    def set_task(self, _):
+        pass
+
     def get_task(self):
         return np.array([0])
 
