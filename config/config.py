@@ -472,7 +472,7 @@ class HopperRL2(Hopper, WalkerRL2):
 
 
 @dataclass
-class ICPI(Args):
+class ICPI(Expert):
     exp_label: str = "icpi"
     num_frames: int = 10_000
     policy_num_steps: int = 10
