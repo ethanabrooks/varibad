@@ -10,3 +10,6 @@ class ArrayWrapper(gym.Wrapper):
     def reset(self):
         self.env.reset()
         return self.env.obs_array()
+
+    def reset_task(self, task):
+        pass
