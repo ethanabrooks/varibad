@@ -201,7 +201,7 @@ register(
 #     )
 register(
     "space-invaders-v0",
-    "environments.icpi.space_invaders:create",
+    entry_point="environments.icpi.space_invaders:create",
     kwargs={
         "width": 4,
         "height": 5,
