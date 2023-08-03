@@ -26,7 +26,6 @@ class DummyVecEnv(VecEnv):
         self.envs = [fn() for fn in env_fns]
         env = self.envs[0]
         VecEnv.__init__(self, len(env_fns), env.observation_space, env.action_space)
-        self._max_episode_steps = env.unwrapped._max_episode_steps
         obs_space = env.observation_space
         if isinstance(obs_space, spaces.MultiDiscrete):
             obs_space.shape = obs_space.shape[0]

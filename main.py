@@ -37,7 +37,7 @@ def parse_args(args=None):
     parser.add_argument("--artifact")
     parser.add_argument("--gpus-per-proc", type=float, default=1)
     parser.add_argument("--policy-layer-size", type=float, default=64)
-    parser.add_argument("--num_processes", type=float, default=4)
+    parser.add_argument("--num_processes", type=int, default=4)
     parser.add_argument("--lr-policy", type=float, default=7e-4)
     args = parser.parse_args(args)
     env = args.env_type

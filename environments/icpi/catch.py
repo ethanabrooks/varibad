@@ -27,6 +27,7 @@ from gym.spaces import Discrete, MultiDiscrete
 
 from environments.icpi.base import Data, TimeStep
 from environments.icpi.wrapper import ArrayWrapper
+from environments.mujoco.rand_param_envs.gym.wrappers.time_limit import TimeLimit
 
 _ACTIONS = (-1, 0, 1)  # Left, no-op, right.
 
@@ -40,8 +41,13 @@ PADDLE_CODE = 2.0
 
 def create(columns: int, rows: int, seed: int):
     return ArrayWrapper(
-        Wrapper(
-            data=Data.code, env=Env(columns=columns, rows=rows, seed=seed), hint=False
+        TimeLimit(
+            Wrapper(
+                data=Data.code,
+                env=Env(columns=columns, rows=rows, seed=seed),
+                hint=False,
+            ),
+            max_episode_steps=100,
         )
     )
 

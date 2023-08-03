@@ -10,6 +10,7 @@ import numpy as np
 from environments.icpi.base import Data, TimeStep
 import environments.icpi.base as base
 from environments.icpi.wrapper import ArrayWrapper
+from environments.mujoco.rand_param_envs.gym.wrappers.time_limit import TimeLimit
 
 DEAD = "dead"
 
@@ -25,12 +26,15 @@ DEAD = "dead"
 
 def create(width: int, height: int, n_aliens: int, random_seed: int):
     return ArrayWrapper(
-        Env(
-            data=Data.code,
-            width=width,
-            height=height,
-            n_aliens=n_aliens,
-            random_seed=random_seed,
+        TimeLimit(
+            Env(
+                data=Data.code,
+                width=width,
+                height=height,
+                n_aliens=n_aliens,
+                random_seed=random_seed,
+            ),
+            max_episode_steps=100,
         )
     )
 
