@@ -2,21 +2,36 @@ import re
 from dataclasses import dataclass
 from typing import Iterable, Optional, Tuple
 
-import base_env
 import gym
 import gym.spaces
+from gym.wrappers import TimeLimit
 import numpy as np
-from base_env import TimeStep
-from rl.lm import Data
+from environments.icpi.base import Data, TimeStep
+import environments.icpi.base as base
+from environments.icpi.wrapper import ArrayWrapper
 
 REWARDS = {
     1.0: "Success",
     0.0: "Failure",
 }
 
+#     env = TimeLimit(
+#         chain.Env(d=1, data=data, goal=4, n=8, random_seed=seed, hint=hint),
+#         max_episode_steps=8,
+#     )
+
+
+def create(d: int, goal: int, n: int, random_seed: int, max_episode_steps: int):
+    return ArrayWrapper(
+        TimeLimit(
+            Env(d=d, goal=goal, n=n, random_seed=random_seed),
+            max_episode_steps=max_episode_steps,
+        )
+    )
+
 
 @dataclass
-class Env(base_env.Env[int, int]):
+class Env(base.Env[int, int]):
     d: int
     goal: int
     n: int

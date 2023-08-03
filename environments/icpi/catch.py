@@ -17,21 +17,33 @@
 import re
 from typing import List, NamedTuple, Optional, Tuple, cast
 
-import base_env
 import dm_env
 import gym
 import numpy as np
-from base_env import TimeStep
 from bsuite.environments import base
 from bsuite.experiments.catch import sweep
 from dm_env import specs
 from gym.spaces import Discrete, MultiDiscrete
-from rl.lm import Data
+
+from environments.icpi.base import Data, TimeStep
+from environments.icpi.wrapper import ArrayWrapper
 
 _ACTIONS = (-1, 0, 1)  # Left, no-op, right.
 
 BALL_CODE = 1.0
 PADDLE_CODE = 2.0
+
+#     env = catch.Wrapper(
+#         data=data, env=catch.Env(columns=4, rows=5, seed=seed), hint=hint
+#     )
+
+
+def create(columns: int, rows: int, seed: int):
+    return ArrayWrapper(
+        Wrapper(
+            data=Data.code, env=Env(columns=columns, rows=rows, seed=seed), hint=False
+        )
+    )
 
 
 class Obs(NamedTuple):
@@ -130,7 +142,7 @@ class Env(base.Environment):
         return dict(optimal=1)
 
 
-class Wrapper(gym.Wrapper, base_env.Env[Obs, int]):
+class Wrapper(gym.Wrapper, base.Env[Obs, int]):
     metadata = {"render.modes": []}
 
     def __init__(self, data: Data, env: Env, hint: bool):

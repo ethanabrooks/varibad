@@ -3,14 +3,36 @@ import re
 from dataclasses import dataclass, field
 from typing import Iterable, NamedTuple, Optional, Tuple
 
-import base_env
 import gym
 import gym.spaces
 import numpy as np
-from base_env import TimeStep
-from rl.lm import Data
+
+from environments.icpi.base import Data, TimeStep
+import environments.icpi.base as base
+from environments.icpi.wrapper import ArrayWrapper
 
 DEAD = "dead"
+
+#     env = space_invaders.Env(
+#         data=data,
+#         width=4,
+#         height=5,
+#         n_aliens=2,
+#         random_seed=seed,
+#         hint=hint,
+#     )
+
+
+def create(width: int, height: int, n_aliens: int, random_seed: int):
+    return ArrayWrapper(
+        Env(
+            data=Data.code,
+            width=width,
+            height=height,
+            n_aliens=n_aliens,
+            random_seed=random_seed,
+        )
+    )
 
 
 class C(NamedTuple):
@@ -76,7 +98,7 @@ class Obs(NamedTuple):
 
 
 @dataclass
-class Env(base_env.Env[Obs, int]):
+class Env(base.Env[Obs, int]):
     height: int
     n_aliens: int
     random_seed: int

@@ -3,11 +3,45 @@ import re
 from dataclasses import dataclass, field
 from typing import Iterable, NamedTuple, Optional
 
-import base_env
 import numpy as np
-from base_env import TimeStep
 from gym.spaces import Discrete
-from rl.lm import Data
+from gym.wrappers import TimeLimit
+import environments.icpi.base as base
+from environments.icpi.wrapper import ArrayWrapper
+
+# elif env_id == "point-mass":
+#     max_steps = 8
+#     env = TimeLimit(
+#         point_mass.Env(
+#             data=data,
+#             hint=hint,
+#             max_distance=6,
+#             _max_trajectory=max_steps,
+#             pos_threshold=2,
+#             random_seed=seed,
+#         ),
+#         max_episode_steps=max_steps,
+#     )
+
+
+def create(
+    max_distance: int,
+    max_trajectory: int,
+    pos_threshold: int,
+    random_seed: int,
+    max_episode_step: int,
+):
+    return ArrayWrapper(
+        TimeLimit(
+            Env(
+                max_distance=max_distance,
+                max_trajectory=max_trajectory,
+                pos_threshold=pos_threshold,
+                random_seed=random_seed,
+            ),
+            max_episode_steps=max_episode_step,
+        )
+    )
 
 
 class State(NamedTuple):
@@ -16,7 +50,7 @@ class State(NamedTuple):
 
 
 @dataclass
-class Env(base_env.Env):
+class Env(base.Env):
     max_distance: float
     _max_trajectory: int
     pos_threshold: float
@@ -148,10 +182,10 @@ class Env(base_env.Env):
     def success(self, pos, vel):
         return abs(pos) <= self.pos_threshold and vel == 0
 
-    def termination_str(self, ts: TimeStep) -> str:
+    def termination_str(self, ts: base.TimeStep) -> str:
         return ""
 
-    def ts_to_string(self, ts: TimeStep) -> str:
+    def ts_to_string(self, ts: base.TimeStep) -> str:
         reward_str = f"assert reward == {ts.reward}"
         parts = [
             self.state_str(ts.state),
@@ -183,7 +217,7 @@ class Env(base_env.Env):
 
 
 if __name__ == "__main__":
-    from rl.common import get_value
+    from base import get_value
 
     env = Env(
         hint=True,
@@ -191,7 +225,7 @@ if __name__ == "__main__":
         _max_trajectory=6,
         pos_threshold=2,
         random_seed=0,
-        data=Data.code,
+        data=base.Data.code,
     )
 
     while True:
@@ -203,7 +237,7 @@ if __name__ == "__main__":
             a = env.action_space.sample()
             # a = int(input("Action: ")) - 1
             s_, r, t, i = env.step(a)
-            ts = base_env.TimeStep(s, a, r, t, s_)
+            ts = base.TimeStep(s, a, r, t, s_)
             print(
                 env.initial_str()
                 + env.state_str(ts.state)

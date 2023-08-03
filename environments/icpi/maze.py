@@ -2,11 +2,11 @@ import re
 from dataclasses import astuple, dataclass, field
 from typing import Generic, Iterable, Iterator, NamedTuple, Optional, Tuple, TypeVar
 
-import base_env
+from gym.wrappers import TimeLimit
 import numpy as np
-from base_env import TimeStep
 from gym.spaces import Discrete
-from rl.lm import Data
+import environments.icpi.base as base
+from environments.icpi.wrapper import ArrayWrapper
 
 WALL = "█"
 GOAL = "*"
@@ -19,6 +19,15 @@ MAP = """\
 █ ·   ·   · █
 █████████████\
 """
+#     env = TimeLimit(
+#         maze.Env(data=data, hint=hint, random_seed=seed), max_episode_steps=8
+#     )
+
+
+def create(random_seed: int, max_episode_step: int):
+    return ArrayWrapper(
+        TimeLimit(Env(random_seed=random_seed), max_episode_steps=max_episode_step)
+    )
 
 
 class C(NamedTuple):
@@ -53,7 +62,7 @@ REWARDS = {
 
 
 @dataclass
-class Env(base_env.Env[C, int]):
+class Env(base.Env[C, int]):
     random_seed: int
     goal: C = field(init=False)
     t: int = field(init=False)
@@ -231,7 +240,7 @@ class Env(base_env.Env[C, int]):
     def success(self, state: C) -> bool:
         return state == self.goal
 
-    def ts_to_string(self, ts: TimeStep) -> str:
+    def ts_to_string(self, ts: base.TimeStep) -> str:
         reward_str = f"assert reward == {ts.reward}"
         parts = [
             self.state_str(ts.state),
@@ -271,10 +280,10 @@ class Env(base_env.Env[C, int]):
 
 if __name__ == "__main__":
 
-    def get_value(*trajectory: TimeStep, gamma: float) -> float:
+    def get_value(*trajectory: base.TimeStep, gamma: float) -> float:
         return sum([gamma**t * ts.reward for t, ts in enumerate(trajectory)])
 
-    env = Env(hint=True, random_seed=0, data=Data.code)
+    env = Env(hint=True, random_seed=0, data=base.Data.code)
     while True:
         s = env.reset()
         print(env.initial_str() + env.state_str(s))
@@ -284,7 +293,7 @@ if __name__ == "__main__":
             a = env.action_space.sample()
             # a = int(input("Action: ")) - 1
             s_, r, t, i = env.step(a)
-            ts = TimeStep(s, a, r, t, s_)
+            ts = base.TimeStep(s, a, r, t, s_)
             print(
                 env.initial_str()
                 + env.state_str(ts.state)
