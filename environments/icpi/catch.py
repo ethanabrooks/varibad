@@ -86,6 +86,7 @@ class Env(base.Environment):
         self._paddle_y = None
         self.bsuite_num_episodes = sweep.NUM_EPISODES
         self.reset()
+        self.action_space = gym.spaces.Discrete(len(_ACTIONS))
         self.observation_space = gym.spaces.Box(
             low=0, high=1, shape=self.obs_array().shape
         )
