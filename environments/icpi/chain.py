@@ -15,19 +15,11 @@ REWARDS = {
     0.0: "Failure",
 }
 
+
 #     env = TimeLimit(
 #         chain.Env(d=1, data=data, goal=4, n=8, random_seed=seed, hint=hint),
 #         max_episode_steps=8,
 #     )
-
-
-def create(d: int, goal: int, n: int, random_seed: int, max_episode_steps: int):
-    return ArrayWrapper(
-        TimeLimit(
-            Env(d=d, goal=goal, n=n, random_seed=random_seed, hint=False),
-            max_episode_steps=max_episode_steps,
-        )
-    )
 
 
 @dataclass
@@ -99,7 +91,7 @@ class Env(base.Env[int, int]):
         return None
 
     def obs_array(self) -> np.ndarray:
-        return np.array([self._state])
+        return self._state
 
     def state_str(self, state: Tuple[int, ...]) -> str:
         state_str = f"assert state == {list(state)}"

@@ -135,8 +135,16 @@ register(
 #     )
 register(
     "chain-v0",
-    entry_point="environments.icpi.chain:create",
-    kwargs={"d": 1, "goal": 4, "n": 8, "random_seed": 0, "max_episode_steps": 8},
+    entry_point="environments.icpi.base:create",
+    kwargs={
+        "entry_point": "environments.icpi.chain:Env",
+        "d": 1,
+        "goal": 4,
+        "n": 8,
+        "random_seed": 0,
+        "max_episode_steps": 8,
+    },
+    max_episode_steps=8,
 )
 # elif env_id == "distractor-chain":
 #     env = TimeLimit(

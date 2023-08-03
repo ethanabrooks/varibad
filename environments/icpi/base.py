@@ -1,10 +1,15 @@
 import abc
+import numpy as np
 import re
 from dataclasses import dataclass
 from typing import Generic, Iterable, Optional, TypeVar
 from enum import Enum, auto
+from gym.envs.registration import load
+from gym.wrappers import TimeLimit
 
 import gym
+
+from environments.icpi.wrapper import ArrayWrapper
 
 ObsType = TypeVar("ObsType")
 ActType = TypeVar("ActType")
@@ -22,6 +27,14 @@ class TimeStep(Generic[ObsType, ActType]):
     reward: float
     done: bool
     next_state: ObsType
+
+
+def create(entry_point, max_episode_steps, test_threshold=None, **kwargs):
+    # Load the environment from its entry point
+    env_cls = load(entry_point)
+    env = env_cls(**kwargs, hint=False)
+    env._max_episode_steps = max_episode_steps
+    return ArrayWrapper(TimeLimit(env, max_episode_steps=max_episode_steps))
 
 
 @dataclass
@@ -140,3 +153,9 @@ class Env(gym.Env, Generic[ObsType, ActType], abc.ABC):
 
     def transition_stop(self) -> str:
         return "done" + self.done_stop()
+
+    def get_task(self):
+        return np.array([0])
+
+    def reset_task(self, task):
+        pass
