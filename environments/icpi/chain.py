@@ -24,7 +24,7 @@ REWARDS = {
 def create(d: int, goal: int, n: int, random_seed: int, max_episode_steps: int):
     return ArrayWrapper(
         TimeLimit(
-            Env(d=d, goal=goal, n=n, random_seed=random_seed),
+            Env(d=d, goal=goal, n=n, random_seed=random_seed, hint=False),
             max_episode_steps=max_episode_steps,
         )
     )
