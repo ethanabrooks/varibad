@@ -2,6 +2,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from typing import Iterable, NamedTuple, Optional
+import gym
 
 import numpy as np
 from gym.spaces import Discrete
@@ -64,6 +65,10 @@ class Env(base.Env):
     def __post_init__(self):
         self.action_space = Discrete(2, seed=self.random_seed)
         self.rng = np.random.default_rng(self.random_seed)
+        self.reset()
+        self.observation_space = gym.spaces.Box(
+            low=0, high=1, shape=self.obs_array().shape
+        )
 
     @staticmethod
     def action_stop() -> str:

@@ -1,6 +1,7 @@
 import re
 from dataclasses import astuple, dataclass, field
 from typing import Generic, Iterable, Iterator, NamedTuple, Optional, Tuple, TypeVar
+import gym
 
 from gym.wrappers import TimeLimit
 import numpy as np
@@ -70,6 +71,10 @@ class Env(base.Env[C, int]):
     def __post_init__(self):
         self.random = np.random.default_rng(self.random_seed)
         self.action_space = Discrete(len(self.actions()), seed=self.random_seed)
+        self.reset()
+        self.observation_space = gym.spaces.Box(
+            low=0, high=1, shape=self.obs_array().shape
+        )
 
         def patch(*seq: T) -> Iterator[Tuple[T, T, T]]:
             """

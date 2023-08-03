@@ -112,6 +112,10 @@ class Env(base.Env[Obs, int]):
         self.action_space = gym.spaces.Discrete(
             len(self.actions()), seed=self.random_seed
         )
+        self.reset()
+        self.observation_space = gym.spaces.Box(
+            low=0, high=1, shape=self.obs_array().shape
+        )
 
     @staticmethod
     def action_stop() -> str:

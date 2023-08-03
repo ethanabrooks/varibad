@@ -42,6 +42,10 @@ class Env(base.Env[int, int]):
         self.action_space = gym.spaces.Discrete(
             len(self.actions()), seed=self.random_seed
         )
+        self.reset()
+        self.observation_space = gym.spaces.Box(
+            low=0, high=1, shape=self.obs_array().shape
+        )
 
     def action_str(self, action: int) -> str:
         action_str = self.actions()[action]
