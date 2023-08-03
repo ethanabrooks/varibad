@@ -21,7 +21,7 @@ def make_env(
     episodes_per_task,
     tasks,
     add_done_info,
-    store_rollouts,
+    store_rollouts=False,
     **kwargs
 ):
     def _thunk():
