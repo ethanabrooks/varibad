@@ -115,6 +115,9 @@ class Env(base_env.Env):
     def start_states(self) -> Optional[Iterable[State]]:
         return None
 
+    def obs_array(self):
+        return np.array([self.state.pos, self.state.vel])
+
     def state_str(self, state: State) -> str:
         state_str = f"assert pos == {state.pos:.2f} and vel == {state.vel:.2f}"
         hint_str = self.hint_str(state)

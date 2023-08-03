@@ -81,6 +81,9 @@ class Env(base_env.Env[int, int]):
     def start_states(self) -> Optional[Iterable[int]]:
         return None
 
+    def obs_array(self) -> np.ndarray:
+        return np.array([self._state])
+
     def state_str(self, state: Tuple[int, ...]) -> str:
         state_str = f"assert state == {list(state)}"
         if self.hint:

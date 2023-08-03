@@ -186,6 +186,14 @@ class Env(base_env.Env[Obs, int]):
         state_str = "assert " + " and ".join(assertions)
         return state_str + self.state_stop()
 
+    def obs_array(self) -> np.ndarray:
+        def aliens():
+            for a in self.aliens:
+                yield a.xy.x
+                yield a.xy.y
+
+        return np.array([self.agent, *aliens()])
+
     def start_states(self) -> Optional[Iterable[Obs]]:
         for agent, *aliens in itertools.permutations(range(self.n_aliens)):
             aliens = [Alien.spawn(x, self.height) for x in aliens]

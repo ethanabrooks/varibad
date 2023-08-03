@@ -122,6 +122,10 @@ class Env(base.Environment):
     def _observation(self) -> Obs:
         return Obs(paddle_x=self._paddle_x, ball_x=self._ball_x, ball_y=self._ball_y)
 
+    def obs_array(self) -> np.ndarray:
+        obs = self._observation()
+        return np.array([obs.paddle_x, obs.ball_x, obs.ball_y])
+
     def bsuite_info(self):
         return dict(optimal=1)
 

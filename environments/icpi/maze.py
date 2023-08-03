@@ -192,6 +192,9 @@ class Env(base_env.Env[C, int]):
         self.min_steps = self.distance[self._state]
         return self._state
 
+    def obs_array(self):
+        return np.array(self._state)
+
     def reward_str(self, reward: float) -> str:
         return f"assert reward == {int(reward)}"
 
