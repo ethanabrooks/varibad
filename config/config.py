@@ -469,3 +469,41 @@ class HopperMultitask(Hopper, WalkerMultitask):
 @dataclass
 class HopperRL2(Hopper, WalkerRL2):
     pass
+
+
+@dataclass
+class ICPI(Args):
+    exp_label: str = "icpi"
+    num_frames: int = 10_000
+    policy_num_steps: int = 10
+    policy_layers: list[int] = field(default_factory=lambda: [64])
+
+
+@dataclass
+class Chain(ICPI):
+    env_name: str = "chain-v0"
+
+
+@dataclass
+class DistractorChain(ICPI):
+    env_name: str = "distractor-chain-v0"
+
+
+@dataclass
+class Maze(ICPI):
+    env_name: str = "maze-v0"
+
+
+@dataclass
+class MiniCatch(ICPI):
+    env_name: str = "mini-catch-v0"
+
+
+@dataclass
+class PointMass(ICPI):
+    env_name: str = "point-mass-v0"
+
+
+@dataclass
+class SpaceInvaders(Args):
+    env_name: str = "SpaceInvaders-v0"

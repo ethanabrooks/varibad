@@ -36,6 +36,9 @@ def parse_args(args=None):
     parser.add_argument("--notes")
     parser.add_argument("--artifact")
     parser.add_argument("--gpus-per-proc", type=float, default=1)
+    parser.add_argument("--policy-layer-size", type=float, default=64)
+    parser.add_argument("--num_processes", type=float, default=4)
+    parser.add_argument("--lr-policy", type=float, default=7e-4)
     args = parser.parse_args(args)
     env = args.env_type
 
@@ -155,10 +158,33 @@ def parse_args(args=None):
     elif env == "pointrobot_rl2":
         config_args = config.PointRobotRL2
 
+    # --- ICPI ---
+    elif env == "chain":
+        config_args = config.Chain
+    elif env == "distractor-chain":
+        config_args = config.DistractorChain
+    elif env == "maze":
+        config_args = config.Maze
+    elif env == "catch":
+        config_args = config.MiniCatch
+    elif env == "pointmass":
+        config_args = config.PointMass
+    elif env == "space-invaders":
+        config_args = config.SpaceInvaders
+    else:
+        raise RuntimeError(f"Invalid environment: {env}")
+
     args.commit = Repo(".").head.commit.hexsha
     config_args = config_args()
     for k, v in vars(args).items():
         setattr(config_args, k, v)
+
+    # parser.add_argument("--policy-layer-size", type=float, default=64)
+    # parser.add_argument("--num_processes", type=float, default=4)
+    # parser.add_argument("--lr-policy", type=float, default=7e-4)
+    config_args.policy_layers = [args.policy_layer_size]
+    config_args.num_processes = args.num_processes
+    config_args.lr_policy = args.lr_policy
 
     return config_args
 
