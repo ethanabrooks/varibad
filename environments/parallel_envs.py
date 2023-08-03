@@ -77,7 +77,7 @@ def make_vec_envs(
         for i in range(num_processes)
     ]
 
-    if len(envs) > 1:
+    if len(envs) > 2:
         envs = SubprocVecEnv(envs)
     else:
         envs = DummyVecEnv(envs)
