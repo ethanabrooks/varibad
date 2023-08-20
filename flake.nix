@@ -52,29 +52,6 @@
         grpcio-tools = pyprev.grpcio-tools.overridePythonAttrs (old: {
           buildInputs = [pyfinal.grpcio pkgs.gcc-unwrapped];
         });
-        mjrl = pyprev.buildPythonPackage {
-          pname = "mjrl";
-          version = "0.0.0";
-          buildInputs = with pyfinal; [
-            setuptools
-            gym
-            six
-            mujoco-py
-          ];
-          src = fetchGit {
-            url = "https://github.com/aravindr93/mjrl";
-            rev = "3871d93763d3b49c4741e6daeaebbc605fe140dc";
-          };
-          doCheck = false;
-        };
-        d4rl =
-          (pyprev.d4rl.override {
-            preferWheel = false;
-          })
-          .overridePythonAttrs (old: {
-            buildInputs = old.buildInputs ++ [pyfinal.mjrl];
-            patches = [./d4rl.patch];
-          });
         mujoco-py =
           (pyprev.mujoco-py.override {
             preferWheel = false;
@@ -129,7 +106,6 @@
           alejandra
           poetry
           poetryEnv
-          ffmpeg
           myNixgl.nixGLNvidia
         ];
         PYTHONBREAKPOINT = "ipdb.set_trace";
