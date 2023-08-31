@@ -150,12 +150,19 @@ def parse_args(args=None):
     #     raise Exception("Invalid Environment")
 
     # --- PointRobot 2D Navigation ---
-    elif env == "pointrobot_multitask":
+    elif env == "point_robot_multitask":
         config_args = config.PointRobotMultitask
-    elif env == "pointrobot_rl2":
+    elif env == "point_robot_rl2":
         config_args = config.PointRobotRL2
-    elif env == "pointrobot_ad":
+    elif env == "point_robot_ad":
         config_args = config.PointRobotAD
+
+    elif env == "sparse_point_robot_multitask":
+        config_args = config.SparsePointRobotMultitask
+    elif env == "sparse_point_robot_rl2":
+        config_args = config.SparsePointRobotRL2
+    elif env == "sparse_point_robot_ad":
+        config_args = config.SparsePointRobotAD
 
     args.commit = Repo(".").head.commit.hexsha
     config_args = config_args()

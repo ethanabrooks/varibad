@@ -381,7 +381,7 @@ class CheetahVelRL2(RL2, CheetahVel):
 
 @dataclass
 class PointRobot(Args):
-    env_name: str = "SparsePointEnv-v0"
+    env_name: str = "PointEnv-v0"
     num_frames: int = 5e7
 
 
@@ -399,9 +399,27 @@ class PointRobotExpert(Expert, PointRobot):
 class PointRobotMultitask(Multitask, PointRobot):
     pass
 
+class SparsePointRobot(Args):
+    env_name: str = "SparsePointEnv-v0"
+    num_frames: int = 5e7
+
 
 @dataclass
-class PointRobotRL2(RL2, PointRobot):
+class SparsePointRobotAD(AD, SparsePointRobot):
+    num_processes: int = 64
+
+
+@dataclass
+class SparsePointRobotExpert(Expert, SparsePointRobot):
+    pass
+
+
+@dataclass
+class SparsePointRobotMultitask(Multitask, SparsePointRobot):
+    pass
+
+@dataclass
+class SparsePointRobotRL2(RL2, SparsePointRobot):
     max_rollouts_per_task: int = 3
     policy_entropy_coef: float = 0.001
     policy_gamma: float = 0.99
