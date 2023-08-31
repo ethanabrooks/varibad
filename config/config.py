@@ -205,6 +205,7 @@ class RL2(Args):
     single_task_mode: bool = (
         False  # train policy on one (randomly chosen) environment only
     )
+    test: bool = False
 
 
 @dataclass

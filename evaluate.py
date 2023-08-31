@@ -66,6 +66,7 @@ def evaluate(args):
     args.store_rollouts = True
     for seed in seeds:
         args.seed = seed
+        args.test = True
         metalearner = MetaLearner(args)
         logger = metalearner.logger
 
@@ -90,6 +91,7 @@ def evaluate(args):
             num_episodes=args.num_episodes,
             visualize=True,
             test_threshold=args.test_threshold,
+            test=True,
         )
     wandb.finish()
     print("=================== DONE =====================")

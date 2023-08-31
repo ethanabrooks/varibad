@@ -53,6 +53,7 @@ class MetaLearner:
             store_rollouts=args.store_rollouts,
             tasks=None,
             test_threshold=args.test_threshold,
+            test=args.test,
         )
 
         if self.args.single_task_mode:
@@ -73,6 +74,7 @@ class MetaLearner:
                 normalise_rew=args.norm_rew_for_policy,
                 ret_rms=None,
                 tasks=self.test_tasks,
+                test=args.test,
             )
             # save the training tasks so we can evaluate on the same envs later
             utl.save_obj(self.test_tasks, self.logger.full_output_folder, "test_tasks")
