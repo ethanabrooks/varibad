@@ -41,7 +41,9 @@ class PointEnv(Env):
      - reward is L2 distance
     """
 
-    def __init__(self, max_episode_steps=100, goal_sampler=None, test: bool = False):
+    def __init__(
+        self, max_episode_steps=100, goal_sampler=None, test_threshold: float = None
+    ):
         if callable(goal_sampler):
             self.goal_sampler = goal_sampler
         elif isinstance(goal_sampler, str):
@@ -85,7 +87,6 @@ class PointEnv(Env):
         return np.copy(self._state)
 
     def step(self, action):
-
         action = np.clip(action, self.action_space.low, self.action_space.high)
         assert self.action_space.contains(action), action
 
@@ -107,7 +108,6 @@ class PointEnv(Env):
         return_pos=False,
         **kwargs,
     ):
-
         num_episodes = args.max_rollouts_per_task
         if num_episodes is None:
             num_episodes = 1
@@ -150,7 +150,6 @@ class PointEnv(Env):
         start_pos = state
 
         for episode_idx in range(num_episodes):
-
             curr_rollout_rew = []
             pos[episode_idx].append(start_pos[0])
 
@@ -179,7 +178,6 @@ class PointEnv(Env):
                 )
 
             for step_idx in range(1, env._max_episode_steps + 1):
-
                 if step_idx == 1:
                     episode_prev_obs[episode_idx].append(start_obs_raw.clone())
                 else:
@@ -275,7 +273,7 @@ class PointEnv(Env):
             .cpu()
             .numpy()
         )
-        curr_task = env.get_task()
+        [curr_task] = env.get_task()
 
         # plot goal
         axis.scatter(*curr_task, marker="x", color="k", s=50)
@@ -368,10 +366,10 @@ class SparsePointEnv(PointEnv):
         goal_radius=0.2,
         max_episode_steps=100,
         goal_sampler="semi-circle",
-        test: bool = False,
+        **kwargs,
     ):
         super().__init__(
-            max_episode_steps=max_episode_steps, goal_sampler=goal_sampler, test=test
+            max_episode_steps=max_episode_steps, goal_sampler=goal_sampler, **kwargs
         )
         self.goal_radius = goal_radius
         self.reset_task()
