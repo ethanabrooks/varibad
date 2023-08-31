@@ -387,7 +387,7 @@ class PointRobot(Args):
 
 @dataclass
 class PointRobotAD(AD, PointRobot):
-    pass
+    num_processes: int = 64
 
 
 @dataclass
