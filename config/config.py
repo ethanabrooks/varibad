@@ -400,6 +400,19 @@ class PointRobotMultitask(Multitask, PointRobot):
     pass
 
 
+@dataclass
+class PointRobotRL2(RL2, PointRobot):
+    max_rollouts_per_task: int = 3
+    policy_entropy_coef: float = 0.001
+    policy_gamma: float = 0.99
+    policy_num_steps: int = 600
+    ppo_clip_param: float = 0.1
+    ppo_num_minibatch: int = 8
+    vae_subsample_elbos: int = None
+    vae_avg_elbo_terms: bool = False
+    vae_avg_reconstruction_terms: bool = False
+
+
 class SparsePointRobot(Args):
     env_name: str = "SparsePointEnv-v0"
     num_frames: int = 5e7
