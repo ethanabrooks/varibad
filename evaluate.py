@@ -11,7 +11,7 @@ from wandb.sdk.wandb_run import Run
 
 import utils.helpers as utl
 from main import parse_args as base_parse_args
-from metalearner import MetaLearner
+from metalearner import MetaLearner, device
 from utils import evaluation
 
 
@@ -79,6 +79,9 @@ def evaluate(args):
             module = torch.load(os.path.join(logger.full_output_folder, name))
             assert isinstance(module, nn.Module)
             setattr(obj, attr, module)
+        metalearner.policy.actor_critic.dist.min_std = metalearner.policy.actor_critic.dist.min_std.to(device)
+        metalearner.vae.encoder.to(device)
+        metalearner.policy.actor_critic.to(device)
 
         evaluation.evaluate(
             args,
