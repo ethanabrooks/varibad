@@ -154,6 +154,8 @@ def parse_args(args=None):
         config_args = config.PointRobotMultitask
     elif env == "pointrobot_rl2":
         config_args = config.PointRobotRL2
+    elif env == "pointrobot_ad":
+        config_args = config.PointRobotAD
 
     args.commit = Repo(".").head.commit.hexsha
     config_args = config_args()
