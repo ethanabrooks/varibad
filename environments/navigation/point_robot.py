@@ -26,9 +26,18 @@ def circle_goal_sampler():
     return goal
 
 
+def double_arc_goal_sampler(start, end):
+    r = 1.0
+    angle = random.uniform(start, end)
+    angle += np.random.choice(2) * np.pi
+    goal = r * np.array((np.cos(angle), np.sin(angle)))
+    return goal
+
+
 GOAL_SAMPLERS = {
     "semi-circle": semi_circle_goal_sampler,
     "circle": circle_goal_sampler,
+    "double-arc": double_arc_goal_sampler,
 }
 
 
@@ -42,12 +51,23 @@ class PointEnv(Env):
     """
 
     def __init__(
-        self, max_episode_steps=100, goal_sampler=None, test_threshold: float = None
+        self,
+        max_episode_steps=100,
+        goal_sampler=None,
+        test: bool = False,
+        test_threshold: float = None,
     ):
         if callable(goal_sampler):
             self.goal_sampler = goal_sampler
         elif isinstance(goal_sampler, str):
-            self.goal_sampler = GOAL_SAMPLERS[goal_sampler]
+            self.goal_sampler = sampler = GOAL_SAMPLERS[goal_sampler]
+            if goal_sampler == "double-arc":
+                test_threshold = test_threshold or np.pi / 2
+                self.goal_sampler = lambda: (
+                    sampler(0, test_threshold)
+                    if not test
+                    else sampler(test_threshold, np.pi)
+                )
         elif goal_sampler is None:
             self.goal_sampler = semi_circle_goal_sampler
         else:
