@@ -382,7 +382,7 @@ class CheetahVelRL2(RL2, CheetahVel):
 @dataclass
 class PointRobot(Args):
     env_name: str = "PointEnv-v0"
-    num_frames: int = 16e6
+    num_frames: int = 3e6
 
 
 @dataclass
