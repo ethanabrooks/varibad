@@ -382,7 +382,7 @@ class CheetahVelRL2(RL2, CheetahVel):
 @dataclass
 class PointRobot(Args):
     env_name: str = "PointEnv-v0"
-    num_frames: int = 5e7
+    num_frames: int = 16e6
 
 
 @dataclass
@@ -398,6 +398,7 @@ class PointRobotExpert(Expert, PointRobot):
 @dataclass
 class PointRobotMultitask(Multitask, PointRobot):
     pass
+
 
 class SparsePointRobot(Args):
     env_name: str = "SparsePointEnv-v0"
@@ -417,6 +418,7 @@ class SparsePointRobotExpert(Expert, SparsePointRobot):
 @dataclass
 class SparsePointRobotMultitask(Multitask, SparsePointRobot):
     pass
+
 
 @dataclass
 class SparsePointRobotRL2(RL2, SparsePointRobot):
