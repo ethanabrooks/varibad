@@ -352,7 +352,10 @@ class PointEnv(Env):
 
         observations = [o.cpu().numpy() for o in episode_prev_obs]
         [task] = env.get_task()
-        self._plot(observations, task, num_episodes)
+        image_path = (
+            f"{image_folder}/behavior.png" if image_folder is not None else None
+        )
+        self._plot(observations, task, num_episodes, image_path=image_path)
 
         if not return_pos:
             return (
