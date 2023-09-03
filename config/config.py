@@ -4,7 +4,7 @@ from typing import Optional
 
 
 @dataclass
-class Args:
+class ArgsMixin:
     # training parameters
     # --- GENERAL ---
     num_frames: int = field(init=False)  # number of frames to train
@@ -96,7 +96,7 @@ class Args:
 
 
 @dataclass
-class Expert(Args):
+class ExpertMixin:
     exp_label: str = "expert"
     single_task_mode: bool = True
     pass_state_to_policy: bool = True
@@ -107,7 +107,7 @@ class Expert(Args):
 
 
 @dataclass
-class Multitask(Args):
+class MultitaskMixin:
     exp_label: str = "multitask"
     norm_state_for_policy: bool = True
     norm_latent_for_policy: bool = True
@@ -122,16 +122,14 @@ class Multitask(Args):
 
 
 @dataclass
-class AD(Multitask):
+class ADMixin:
     exp_label: str = "AD"
     max_rollouts_per_task: int = None
 
 
 @dataclass
-class RL2(Args):
+class RL2Mixin:
     exp_label: str = "rl2"
-    num_train_tasks: Optional[int] = None
-    num_test_tasks: Optional[int] = None
     policy_layers: list[int] = field(default_factory=lambda: [128])
     disable_decoder: bool = True
     disable_kl_term: bool = True
@@ -209,44 +207,44 @@ class RL2(Args):
 
 
 @dataclass
-class Alchemy(Args):
+class AlchemyMixin:
     env_name: str = "Alchemy-v0"
     num_frames: int = 5e7
 
 
 @dataclass
-class AlchemyExpert(Alchemy, Expert):
+class AlchemyExpert(AlchemyMixin, ExpertMixin, ArgsMixin):
     pass
 
 
 @dataclass
-class AlchemyMultitask(Alchemy, Multitask):
+class AlchemyMultitask(AlchemyMixin, MultitaskMixin, ArgsMixin):
     pass
 
 
 @dataclass
-class AlchemyAD(AD, AlchemyMultitask):
+class AlchemyAD(AlchemyMixin, ADMixin, MultitaskMixin, ArgsMixin):
     pass
 
 
 @dataclass
-class AlchemyRL2(RL2, Alchemy):
+class AlchemyRL2(AlchemyMixin, RL2Mixin, ArgsMixin):
     pass
 
 
 @dataclass
-class AntDir(Args):
+class AntDirMixin:
     num_frames: int = 1e8
     env_name: str = "AntDir2D-v0"
 
 
 @dataclass
-class AntDirExpert(Expert, AntDir):
+class AntDirExpert(AntDirMixin, ExpertMixin, ArgsMixin):
     pass
 
 
 @dataclass
-class AntDirMultitask(Multitask, AntDir):
+class AntDirMultitask(AntDirMixin, MultitaskMixin, ArgsMixin):
     policy_num_steps: int = 200
     policy_state_embedding_dim: int = 64
     policy_task_embedding_dim: int = 64
@@ -254,32 +252,32 @@ class AntDirMultitask(Multitask, AntDir):
 
 
 @dataclass
-class AntDirAD(AD, AntDirMultitask):
+class AntDirAD(AntDirMixin, ADMixin, MultitaskMixin, ArgsMixin):
     num_frames: int = 40_000_000
 
 
 @dataclass
-class AntDirRL2(RL2, AntDir):
+class AntDirRL2(AntDirMixin, RL2Mixin, ArgsMixin):
     max_rollouts_per_task: int = 2
     kl_weight: float = 0.1
     ppo_num_minibatch: int = 4
 
 
 @dataclass
-class AntGoal(Args):
+class AntGoalMixin:
     env_name: str = "AntGoal-v0"
     num_frames: int = 1e8
 
 
 @dataclass
-class AntGoalExpert(Expert, AntGoal):
+class AntGoalExpert(AntGoalMixin, ExpertMixin, ArgsMixin):
     lr_policy: float = 0.001
     policy_anneal_lr: bool = True
     policy_initialisation: str = "orthogonal"
 
 
 @dataclass
-class AntGoalMultitask(Multitask, AntGoal):
+class AntGoalMultitask(AntGoalMixin, MultitaskMixin, ArgsMixin):
     lr_policy: float = 0.001
     policy_anneal_lr: bool = True
     policy_initialisation: str = "orthogonal"
@@ -290,12 +288,12 @@ class AntGoalMultitask(Multitask, AntGoal):
 
 
 @dataclass
-class AntGoalAD(AD, AntGoalMultitask):
+class AntGoalAD(AntGoalMixin, ADMixin, MultitaskMixin, ArgsMixin):
     num_frames: int = 20_000_000
 
 
 @dataclass
-class AntGoalRL2(RL2, AntGoal):
+class AntGoalRL2(AntGoalMixin, RL2Mixin, ArgsMixin):
     kl_weight: float = 0.1
     lr_policy: float = 0.0003
     lr_vae: float = 0.0003
@@ -310,13 +308,13 @@ class AntGoalRL2(RL2, AntGoal):
 
 
 @dataclass
-class CheetahDir(Args):
+class CheetahDirMixin:
     env_name: str = "HalfCheetahDir-v0"
     num_frames: int = 1e8
 
 
 @dataclass
-class CheetahDirExpert(Expert, CheetahDir):
+class CheetahDirExpert(CheetahDirMixin, ExpertMixin, ArgsMixin):
     lr_policy: float = 0.001
     policy_anneal_lr: bool = True
     policy_num_steps: int = 800
@@ -325,7 +323,7 @@ class CheetahDirExpert(Expert, CheetahDir):
 
 
 @dataclass
-class CheetahDirMultitask(Multitask, CheetahDir):
+class CheetahDirMultitask(CheetahDirMixin, MultitaskMixin, ArgsMixin):
     lr_policy: float = 0.001
     policy_anneal_lr: bool = True
     policy_num_steps: int = 800
@@ -333,12 +331,12 @@ class CheetahDirMultitask(Multitask, CheetahDir):
 
 
 @dataclass
-class CheetahDirAD(AD, CheetahDirMultitask):
+class CheetahDirAD(CheetahDirMixin, ADMixin, MultitaskMixin, ArgsMixin):
     pass
 
 
 @dataclass
-class CheetahDirRL2(RL2, CheetahDir):
+class CheetahDirRL2(CheetahDirMixin, RL2Mixin, ArgsMixin):
     kl_weight: float = 0.1
     max_rollouts_per_task: int = 2
     ppo_clip_param: float = 0.1
@@ -346,32 +344,32 @@ class CheetahDirRL2(RL2, CheetahDir):
 
 
 @dataclass
-class CheetahVel(Args):
+class CheetahVelMixin:
     env_name: str = "HalfCheetahVel-v0"
     num_frames: int = 1e8
 
 
 @dataclass
-class CheetahVelExpert(Expert, CheetahVel):
+class CheetahVelExpert(CheetahVelMixin, ExpertMixin, ArgsMixin):
     policy_num_steps: int = 400
     ppo_num_epochs: int = 16
     ppo_num_minibatch: int = 4
 
 
 @dataclass
-class CheetahVelMultitask(Multitask, CheetahVel):
+class CheetahVelMultitask(CheetahVelMixin, MultitaskMixin, ArgsMixin):
     policy_state_embedding_dim: int = 64
     policy_task_embedding_dim: int = 64
     ppo_num_epochs: int = 16
 
 
 @dataclass
-class CheetahVelAD(AD, CheetahVelMultitask):
+class CheetahVelAD(CheetahVelMixin, ADMixin, MultitaskMixin, ArgsMixin):
     pass
 
 
 @dataclass
-class CheetahVelRL2(RL2, CheetahVel):
+class CheetahVelRL2(CheetahVelMixin, RL2Mixin, ArgsMixin):
     kl_weight: float = 0.1
     max_rollouts_per_task: int = 2
     policy_num_steps: int = 800
@@ -380,7 +378,41 @@ class CheetahVelRL2(RL2, CheetahVel):
 
 
 @dataclass
-class PointRobot(Args):
+class SparsePointRobotMixin:
+    env_name: str = "SparsePointEnv-v0"
+    num_frames: int = 5e7
+
+
+@dataclass
+class SparsePointRobotAD(SparsePointRobotMixin, ADMixin, MultitaskMixin, ArgsMixin):
+    num_processes: int = 64
+
+
+@dataclass
+class SparsePointRobotExpert(SparsePointRobotMixin, ExpertMixin, ArgsMixin):
+    pass
+
+
+@dataclass
+class SparsePointRobotMultitask(SparsePointRobotMixin, MultitaskMixin, ArgsMixin):
+    pass
+
+
+@dataclass
+class SparsePointRobotRL2(SparsePointRobotMixin, RL2Mixin, ArgsMixin):
+    max_rollouts_per_task: int = 3
+    policy_entropy_coef: float = 0.001
+    policy_gamma: float = 0.99
+    policy_num_steps: int = 600
+    ppo_clip_param: float = 0.1
+    ppo_num_minibatch: int = 8
+    vae_subsample_elbos: int = None
+    vae_avg_elbo_terms: bool = False
+    vae_avg_reconstruction_terms: bool = False
+
+
+@dataclass
+class PointRobotMixin:
     env_name: str = "PointEnv-v0"
     num_frames: int = 3e6
     vis_interval: int = 100  # visualisation interval one eval per n updates
@@ -388,81 +420,40 @@ class PointRobot(Args):
 
 
 @dataclass
-class PointRobotAD(AD, PointRobot):
-    num_processes: int = 64
-
-
-@dataclass
-class PointRobotExpert(Expert, PointRobot):
+class PointRobotAD(PointRobotMixin, SparsePointRobotAD):
     pass
 
 
 @dataclass
-class PointRobotMultitask(Multitask, PointRobot):
+class PointRobotExpert(PointRobotMixin, SparsePointRobotExpert):
     pass
 
 
 @dataclass
-class PointRobotRL2(RL2, PointRobot):
-    max_rollouts_per_task: int = 3
-    policy_entropy_coef: float = 0.001
-    policy_gamma: float = 0.99
-    policy_num_steps: int = 600
-    ppo_clip_param: float = 0.1
-    ppo_num_minibatch: int = 8
-    vae_subsample_elbos: int = None
-    vae_avg_elbo_terms: bool = False
-    vae_avg_reconstruction_terms: bool = False
-
-
-class SparsePointRobot(Args):
-    env_name: str = "SparsePointEnv-v0"
-    num_frames: int = 5e7
-
-
-@dataclass
-class SparsePointRobotAD(AD, SparsePointRobot):
-    num_processes: int = 64
-
-
-@dataclass
-class SparsePointRobotExpert(Expert, SparsePointRobot):
+class PointRobotMultitask(PointRobotMixin, SparsePointRobotMultitask):
     pass
 
 
 @dataclass
-class SparsePointRobotMultitask(Multitask, SparsePointRobot):
+class PointRobotRL2(PointRobotMixin, SparsePointRobotRL2):
     pass
 
 
 @dataclass
-class SparsePointRobotRL2(RL2, SparsePointRobot):
-    max_rollouts_per_task: int = 3
-    policy_entropy_coef: float = 0.001
-    policy_gamma: float = 0.99
-    policy_num_steps: int = 600
-    ppo_clip_param: float = 0.1
-    ppo_num_minibatch: int = 8
-    vae_subsample_elbos: int = None
-    vae_avg_elbo_terms: bool = False
-    vae_avg_reconstruction_terms: bool = False
-
-
-@dataclass
-class Walker(Args):
+class WalkerMixin:
     env_name: str = "Walker2DRandParams-v0"
     num_frames: int = 1e8
 
 
 @dataclass
-class WalkerExpert(Expert, Walker):
+class WalkerExpert(WalkerMixin, ExpertMixin, ArgsMixin):
     norm_task_for_policy: bool = True
     ppo_clip_param: float = 0.05
     num_frames: int = 10_000_000
 
 
 @dataclass
-class WalkerMultitask(Multitask, Walker):
+class WalkerMultitask(WalkerMixin, MultitaskMixin, ArgsMixin):
     results_log_dir: None = None
     policy_state_embedding_dim: int = 128
     policy_task_embedding_dim: int = 128
@@ -474,33 +465,44 @@ class WalkerMultitask(Multitask, Walker):
 
 
 @dataclass
-class WalkerAD(AD, WalkerMultitask):
+class WalkerAD(WalkerMixin, ADMixin, MultitaskMixin, ArgsMixin):
     pass
 
 
 @dataclass
-class WalkerRL2(RL2, Walker):
+class WalkerRL2(WalkerMixin, RL2Mixin, ArgsMixin):
     max_rollouts_per_task: int = 2
     ppo_num_minibatch: int = 1
     kl_weight: float = 0.1
 
 
 @dataclass
-class Hopper(Args):
+class HopperMixin:
     env_name: str = "HopperRandParams-v0"
     num_frames: int = 1e8
 
 
 @dataclass
-class HopperExpert(Hopper, WalkerExpert):
-    pass
+class HopperExpert(HopperMixin, ExpertMixin, ArgsMixin):
+    norm_task_for_policy: bool = True
+    ppo_clip_param: float = 0.05
+    num_frames: int = 10_000_000
 
 
 @dataclass
-class HopperMultitask(Hopper, WalkerMultitask):
-    pass
+class HopperMultitask(HopperMixin, MultitaskMixin, ArgsMixin):
+    results_log_dir: None = None
+    policy_state_embedding_dim: int = 128
+    policy_task_embedding_dim: int = 128
+    norm_task_for_policy: bool = True
+    policy_layers: list = field(default_factory=lambda: [256, 128])
+    ppo_num_minibatch: int = 2
+    ppo_clip_param: float = 0.05
+    policy_num_steps: int = 200
 
 
 @dataclass
-class HopperRL2(Hopper, WalkerRL2):
-    pass
+class HopperRL2(HopperMixin, RL2Mixin, ArgsMixin):
+    max_rollouts_per_task: int = 2
+    ppo_num_minibatch: int = 1
+    kl_weight: float = 0.1
