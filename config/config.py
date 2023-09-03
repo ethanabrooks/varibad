@@ -384,6 +384,8 @@ class CheetahVelRL2(RL2, CheetahVel):
 class PointRobot(Args):
     env_name: str = "PointEnv-v0"
     num_frames: int = 3e6
+    vis_interval: int = 100  # visualisation interval one eval per n updates
+    log_interval: int = 10
 
 
 @dataclass
