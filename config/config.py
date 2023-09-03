@@ -207,32 +207,6 @@ class RL2Mixin:
 
 
 @dataclass
-class AlchemyMixin:
-    env_name: str = "Alchemy-v0"
-    num_frames: int = 5e7
-
-
-@dataclass
-class AlchemyExpert(AlchemyMixin, ExpertMixin, ArgsMixin):
-    pass
-
-
-@dataclass
-class AlchemyMultitask(AlchemyMixin, MultitaskMixin, ArgsMixin):
-    pass
-
-
-@dataclass
-class AlchemyAD(AlchemyMixin, ADMixin, MultitaskMixin, ArgsMixin):
-    pass
-
-
-@dataclass
-class AlchemyRL2(AlchemyMixin, RL2Mixin, ArgsMixin):
-    pass
-
-
-@dataclass
 class AntDirMixin:
     num_frames: int = 1e8
     env_name: str = "AntDir2D-v0"
