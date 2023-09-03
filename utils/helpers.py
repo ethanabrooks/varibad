@@ -1,5 +1,6 @@
 import datetime
 import json
+import git
 import os
 import pickle
 
@@ -55,6 +56,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #         save_obj(obs_rms, save_path, "env_obs_rms{0}.pkl".format(iter_idx))
 
 console = Console()
+
 
 def reset_env(env, args, indices=None, state=None):
     """env can be many environments or just one"""
@@ -423,9 +425,31 @@ def get_project_name():
     return pyproject["tool"]["poetry"]["name"]
 
 
+PROJECT_PATH = os.path.dirname(os.path.realpath(os.path.join(__file__, "..")))
+
+
+def get_repo(path=PROJECT_PATH, search_parent_directories=True):
+    repo = git.Repo(path, search_parent_directories=search_parent_directories)
+    return repo
+
+
+def get_git_rev(*args, **kwargs):
+    try:
+        repo = get_repo(*args, **kwargs)
+        if repo.head.is_detached:
+            git_rev = repo.head.object.name_rev
+        else:
+            git_rev = repo.active_branch.commit.name_rev
+    except:
+        git_rev = None
+
+    return git_rev
+
+
 def sweep(args, config: dict, train_func):
     timestamp = datetime.datetime.now().strftime("-%d-%m-%H:%M:%S")
     group = f"{args.env_name}-{args.exp_label}-{timestamp}"
+    commit = get_git_rev()
     args.project_name = get_project_name()
 
     def trainable(sweep_params):
@@ -439,6 +463,7 @@ def sweep(args, config: dict, train_func):
             except TypeError:
                 v = str(v)
             config[k] = v
+        config.update(commit=commit)
         while True:
             try:
                 run = setup_wandb(
