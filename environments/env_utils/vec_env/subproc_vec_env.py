@@ -53,11 +53,13 @@ def worker(remote, parent_remote, env_fn_wrapper):
             elif cmd == "plot":
                 rollout = env.get_rollout()
                 task = env.unwrapped.get_task()
+                image_path = data
                 env.plot(
                     rollouts=[rollout],
                     curr_task=task,
-                    image_path=data,
+                    image_path=image_path,
                 )
+                os.remove(image_path.replace(".png", ".lock"))
 
             else:
                 # try to get the attribute directly
@@ -165,5 +167,14 @@ class SubprocVecEnv(VecEnv):
     def plot(self, i: int, image_path: str):
         self._assert_not_closed()
         image_path = f"{image_path}-env{i}.png"
+
+        lock_path = image_path.replace(".png", ".lock")
+        with open(lock_path, "w"):
+            pass
         self.remotes[i].send(("plot", image_path))
+        sleep_time = 0.01
+        while os.path.exists(lock_path):
+            print(".", end="", flush=True)
+            time.sleep(sleep_time)
+            sleep_time *= 2
         return image_path
