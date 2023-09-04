@@ -1,13 +1,13 @@
 """
 Taken from https://github.com/openai/baselines
 """
-import os
+
 import numpy as np
 from gym import spaces
 
 from . import VecEnv
+from .subproc_vec_env import plot
 from .util import copy_obs_dict, dict_to_obs, obs_space_info
-from environments.env_utils.vec_env.subproc_vec_env import plot
 
 
 class DummyVecEnv(VecEnv):

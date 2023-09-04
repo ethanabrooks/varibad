@@ -126,7 +126,7 @@ class PointEnv(Env):
     ):
         num_episodes = len(observations)
         figsize = (5.5, 4)
-        _, axis = plt.subplots(1, 1, figsize=figsize)
+        fig, axis = plt.subplots(1, 1, figsize=figsize)
         xlim = (-1.3, 1.3)
         if self.goal_sampler == semi_circle_goal_sampler:
             ylim = (-0.3, 1.3)
@@ -175,6 +175,8 @@ class PointEnv(Env):
             plt.close()
         else:
             plt.show()
+
+        return fig
 
     def visualise_behaviour(
         self,

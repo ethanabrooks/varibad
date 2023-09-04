@@ -1,6 +1,5 @@
 import datetime
 import json
-import git
 import os
 import pickle
 
@@ -13,14 +12,15 @@ import warnings
 from distutils.util import strtobool
 from typing import Optional
 
+import git
 import numpy as np
 import tomli
 import torch
 import torch.nn as nn
 from ray import tune
 from ray.air.integrations.wandb import setup_wandb
-from torch.nn import functional as F
 from rich.console import Console
+from torch.nn import functional as F
 
 import wandb
 from environments.parallel_envs import make_vec_envs
@@ -434,14 +434,11 @@ def get_repo(path=PROJECT_PATH, search_parent_directories=True):
 
 
 def get_git_rev(*args, **kwargs):
-    try:
-        repo = get_repo(*args, **kwargs)
-        if repo.head.is_detached:
-            git_rev = repo.head.object.name_rev
-        else:
-            git_rev = repo.active_branch.commit.name_rev
-    except:
-        git_rev = None
+    repo = get_repo(*args, **kwargs)
+    if repo.head.is_detached:
+        git_rev = repo.head.object.name_rev
+    else:
+        git_rev = repo.active_branch.commit.name_rev
 
     return git_rev
 
@@ -489,7 +486,3 @@ def sweep(args, config: dict, train_func):
         trainable=tune.with_resources(trainable, dict(gpu=args.gpus_per_proc)),
         param_space=config,
     ).fit()
-
-
-def get_obs(rollouts):
-    return [np.stack([o for o, *_ in rollout]) for rollout in rollouts if len(rollout)]

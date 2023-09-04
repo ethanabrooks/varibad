@@ -1,21 +1,24 @@
 """
 Taken from https://github.com/openai/baselines
 """
-from multiprocessing import Pipe, Process
 import os
 import time
-from gym import Env
+from multiprocessing import Pipe, Process
 
 import numpy as np
+from gym import Env
 
 from . import CloudpickleWrapper, VecEnv
 
 
 def plot(env: Env, image_path):
     rollouts = env.get_rollouts()
+    observations = [
+        np.stack([o for o, *_ in rollout]) for rollout in rollouts if len(rollout)
+    ]
     task = env.unwrapped.get_task()
-    env.plot(
-        rollouts=rollouts,
+    return env.plot(
+        observations=observations,
         curr_task=task,
         image_path=image_path,
     )
