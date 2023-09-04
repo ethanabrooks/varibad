@@ -352,6 +352,59 @@ class CheetahVelRL2(CheetahVelMixin, RL2Mixin, ArgsMixin):
 
 
 @dataclass
+class GridMixin:
+    env_name: str = "GridNavi-v0"
+
+
+@dataclass
+class GridAD(GridMixin, MultitaskMixin, ArgsMixin):
+    pass
+
+
+@dataclass
+class GridExpert(GridMixin, ExpertMixin, ArgsMixin):
+    pass
+
+
+@dataclass
+class GridMultitask(GridMixin, MultitaskMixin, ArgsMixin):
+    pass
+
+
+@dataclass
+class GridRL2(GridMixin, RL2Mixin, ArgsMixin):
+    action_embedding_size: int = 0
+    encoder_gru_hidden_size: int = 64
+    encoder_max_grad_norm: float = None
+    eval_interval: int = 500
+    input_action: bool = False
+    input_prev_state: bool = False
+    latent_dim: int = 32
+    log_interval: int = 500
+    max_rollouts_per_task: int = 4
+    multihead_for_reward: bool = True
+    num_frames: int = 20_000_000
+    num_vae_updates: int = 3
+    policy_entropy_coef: float = 0.01
+    policy_gamma: float = 0.95
+    policy_layers: list[int] = field(default_factory=lambda: [32])
+    policy_num_steps: int = 60
+    policy_tau: float = 0.95
+    ppo_clip_param: float = 0.05
+    ppo_num_minibatch: int = 4
+    rew_pred_type: str = "bernoulli"
+    reward_decoder_layers: list[int] = field(default_factory=lambda: [32, 32])
+    reward_embedding_size: int = 8
+    save_interval: int = 1000
+    state_decoder_layers: list[int] = field(default_factory=lambda: [32, 32])
+    state_embedding_size: int = 8
+    task_decoder_layers: int = field(default_factory=lambda: [32, 32])
+    use_proper_time_limits: bool = False
+    vae_batch_num_trajs: int = 25
+    vae_subsample_elbos: int = None
+
+
+@dataclass
 class SparsePointRobotMixin:
     env_name: str = "SparsePointEnv-v0"
     num_frames: int = 5e7

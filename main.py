@@ -164,6 +164,12 @@ def parse_args(args=None):
     elif env == "sparse_point_robot_ad":
         config_args = config.SparsePointRobotAD
 
+    elif env == "grid_rl2":
+        config_args = config.GridRL2
+
+    else:
+        raise Exception(f"Invalid Environment: {env}")
+
     args.commit = Repo(".").head.commit.hexsha
     config_args = config_args()
     for k, v in vars(args).items():
