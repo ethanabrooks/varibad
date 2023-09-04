@@ -489,3 +489,7 @@ def sweep(args, config: dict, train_func):
         trainable=tune.with_resources(trainable, dict(gpu=args.gpus_per_proc)),
         param_space=config,
     ).fit()
+
+
+def get_obs(rollouts):
+    return [np.stack([o for o, *_ in rollout]) for rollout in rollouts if len(rollout)]

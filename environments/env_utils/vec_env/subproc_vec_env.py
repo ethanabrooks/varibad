@@ -4,10 +4,21 @@ Taken from https://github.com/openai/baselines
 from multiprocessing import Pipe, Process
 import os
 import time
+from gym import Env
 
 import numpy as np
 
 from . import CloudpickleWrapper, VecEnv
+
+
+def plot(env: Env, image_path):
+    rollouts = env.get_rollouts()
+    task = env.unwrapped.get_task()
+    env.plot(
+        rollouts=rollouts,
+        curr_task=task,
+        image_path=image_path,
+    )
 
 
 def worker(remote, parent_remote, env_fn_wrapper):
@@ -51,15 +62,8 @@ def worker(remote, parent_remote, env_fn_wrapper):
             elif cmd == "reset_task":
                 env.unwrapped.reset_task(data)
             elif cmd == "plot":
-                rollout = env.get_rollout()
-                task = env.unwrapped.get_task()
-                image_path = data
-                env.plot(
-                    rollouts=[rollout],
-                    curr_task=task,
-                    image_path=image_path,
-                )
-                os.remove(image_path.replace(".png", ".lock"))
+                plot(env, image_path=data)
+                os.remove(data.replace(".png", ".lock"))
 
             else:
                 # try to get the attribute directly

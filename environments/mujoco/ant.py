@@ -84,24 +84,11 @@ class AntEnv(MujocoEnv):
     @classmethod
     def plot(
         cls,
-        rollouts: list,
-        curr_task: np.ndarray,
-        num_episodes: int = 1,
-        image_path: Optional[str] = None,
-    ):
-        observations = [
-            np.array([s for s, _, _, _, _ in rollout]) for rollout in rollouts
-        ]
-        return cls._plot(observations, curr_task, num_episodes, image_path)
-
-    @classmethod
-    def _plot(
-        cls,
         observations: list,
         curr_task: np.ndarray,
-        num_episodes: int = 1,
         image_path: Optional[str] = None,
     ):
+        num_episodes = len(observations)
         # plot the movement of the ant
         # print(pos)
         fig = plt.figure(figsize=(5, 4 * num_episodes))
@@ -313,7 +300,8 @@ class AntEnv(MujocoEnv):
         image_path = (
             f"{image_folder}/behavior.png" if image_folder is not None else None
         )
-        cls._plot(observations, task, num_episodes, image_path=image_path)
+
+        cls.plot(observations, task, image_path=image_path)
 
         if not return_pos:
             return (

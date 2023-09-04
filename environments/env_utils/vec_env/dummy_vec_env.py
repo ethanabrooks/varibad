@@ -7,6 +7,7 @@ from gym import spaces
 
 from . import VecEnv
 from .util import copy_obs_dict, dict_to_obs, obs_space_info
+from environments.env_utils.vec_env.subproc_vec_env import plot
 
 
 class DummyVecEnv(VecEnv):
@@ -128,8 +129,6 @@ class DummyVecEnv(VecEnv):
 
     def plot(self, i: int, image_path: str):
         env = self.envs[i]
-        rollout = env.get_rollout()
-        task = env.unwrapped.get_task()
         image_path = f"{image_path}-env{i}.png"
-        env.unwrapped.plot(rollouts=[rollout], curr_task=task, image_path=image_path)
+        plot(env, image_path)
         return image_path

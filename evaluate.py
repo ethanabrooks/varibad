@@ -79,8 +79,11 @@ def evaluate(args):
             module = torch.load(os.path.join(logger.full_output_folder, name))
             assert isinstance(module, nn.Module)
             setattr(obj, attr, module)
-        metalearner.policy.actor_critic.dist.min_std = metalearner.policy.actor_critic.dist.min_std.to(device)
+        metalearner.policy.actor_critic.dist.min_std = (
+            metalearner.policy.actor_critic.dist.min_std.to(device)
+        )
         metalearner.vae.encoder.to(device)
+
         metalearner.policy.actor_critic.to(device)
 
         evaluation.evaluate(

@@ -25,7 +25,7 @@ def evaluate(
     encoder=None,
     num_episodes=None,
     visualize: bool = False,
-    test: bool = False
+    test: bool = False,
 ):
     env_name = args.env_name
     if hasattr(args, "test_env_name"):
