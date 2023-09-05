@@ -24,10 +24,12 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--loadpath")
     parser.add_argument("--num-episodes", type=int)
+    parser.add_argument("--num-processes", type=int, default=1)
     parser.add_argument("--test-threshold", type=float)
     args, rest_args = parser.parse_known_args()
     loadpath = args.loadpath
     num_episodes = args.num_episodes
+    num_processes = args.num_processes
     test_threshold = args.test_threshold
     args = base_parse_args(rest_args)
     args.loadpath = loadpath
