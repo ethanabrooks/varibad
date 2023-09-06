@@ -32,6 +32,8 @@ def parse_args():
     args = base_parse_args(rest_args)
     args.loadpath = loadpath
     args.num_episodes = num_episodes
+    args.num_processes = args.num_processes
+    args.project_name = utl.get_project_name()
     args.test_threshold = test_threshold
     return args
 
@@ -53,7 +55,7 @@ def evaluate(args):
             name=f"evaluate-{args.env_name}-{args.exp_label}",
             config=config,
             notes=args.notes,
-            project=utl.get_project_name(),
+            project=args.project_name,
             sync_tensorboard=True,
             tags=utl.get_tags(args.max_rollouts_per_task),
         )
