@@ -88,7 +88,7 @@ register(
     entry_point="environments.navigation.point_robot:PointEnv",
     kwargs={
         "max_episode_steps": 20,
-        "goal_sampler": "double-arc",
+        "goal_sampler": "custom-arc",
     },
     max_episode_steps=20,
 )

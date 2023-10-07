@@ -35,10 +35,18 @@ def double_arc_goal_sampler(start, end):
     return goal
 
 
+def custom_arc_goal_sampler(start, end):
+    r = 1.0
+    angle = random.uniform(start, end)
+    goal = r * np.array((np.cos(angle), np.sin(angle)))
+    return goal
+
+
 GOAL_SAMPLERS = {
     "semi-circle": semi_circle_goal_sampler,
     "circle": circle_goal_sampler,
     "double-arc": double_arc_goal_sampler,
+    "custom-arc": custom_arc_goal_sampler,
 }
 
 
@@ -68,6 +76,13 @@ class PointEnv(Env):
                     sampler(0, test_threshold)
                     if not test
                     else sampler(test_threshold, np.pi)
+                )
+            elif goal_sampler == "custom-arc":
+                test_threshold = test_threshold or 3 * np.pi / 2
+                self.goal_sampler = lambda: (
+                    sampler(0, test_threshold)
+                    if not test
+                    else sampler(test_threshold, 2 * np.pi)
                 )
         elif goal_sampler is None:
             self.goal_sampler = semi_circle_goal_sampler
